@@ -38,3 +38,35 @@ export async function authenticate(previousState, formData) {
   revalidatePath('/', 'layout');
   redirect('/home'); 
 }
+
+export async function register(previousState, formData) {
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const confirmPassword = formData.get('confirmPassword');
+  const supabase = await createClient();
+
+  if (password !== confirmPassword) {
+    return { message: 'As senhas não coincidem.' };
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    return { message: error.message };
+  }
+
+  return { success: true, message: 'Cadastro realizado! Verifique seu e-mail.' };
+}
+
+export async function logout() {
+  const supabase = await createClient();
+
+  await supabase.auth.signOut();
+
+  revalidatePath('/', 'layout');
+
+  redirect('/');
+}

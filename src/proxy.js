@@ -1,10 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-/**
- * No Next.js 16+, a função deve ser exportada como 'proxy' 
- * ou como 'export default'.
- */
 export async function proxy(req) {
   let res = NextResponse.next({
     request: {
@@ -57,5 +53,6 @@ export async function proxy(req) {
 export const config = {
   matcher: [
     "/home/:path*",
+    "/groups/:path*"
   ],
 };
