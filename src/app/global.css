@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  @layer utilities {
+  /* Classe para esconder a barra de rolagem */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE e Edge antigo */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+@layer base {
+  p, h1, div {
+    padding: 0;
+    margin: 0; 
+  }
+}
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+.animate-fade-in-fast {
+  animation: fade-in 0.2s ease-out forwards;
+}
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
