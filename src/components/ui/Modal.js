@@ -68,20 +68,27 @@ const CloseButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   z-index: 20;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    background: rgba(168, 85, 247, 0.2); /* Roxo em vez de vermelho para combinar */
+    color: #c084fc;
+    border-color: #a855f7;
   }
 `;
 
-export default function Modal({ isOpen, onClose, children, maxWidth }) {
+export default function Modal({ 
+  isOpen, 
+  onClose, 
+  children, 
+  maxWidth, 
+  closeOnOverlayClick = true // Nova prop com valor padrão
+}) {
   if (!isOpen) return null;
   
   return (
-    <Backdrop onClick={onClose}>
+    <Backdrop onClick={() => closeOnOverlayClick && onClose()}>
       <ModalWrapper $maxWidth={maxWidth} onClick={e => e.stopPropagation()}>
         <CloseButton onClick={onClose} aria-label="Fechar">
           ✕

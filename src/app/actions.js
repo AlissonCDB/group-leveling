@@ -27,7 +27,7 @@ export async function authenticate(previousState, formData) {
     await supabase.auth.signOut();
     return { message: 'Erro ao validar sessão. Tente fazer login novamente.' };
   }
-  
+
   await supabase
     .from('user_access')
     .select('access_level')
@@ -36,26 +36,46 @@ export async function authenticate(previousState, formData) {
 
   // 3. Redirecionamento forçado para /home
   revalidatePath('/', 'layout');
-  redirect('/home'); 
+  redirect('/home');
 }
 
 export async function register(previousState, formData) {
   const email = formData.get('email');
   const password = formData.get('password');
   const confirmPassword = formData.get('confirmPassword');
+
+  // Novos campos capturados do formulário
+  const userName = formData.get('user_name');
+  const lastName = formData.get('last_name');
+  const idClass = formData.get('id_class');
+
   const supabase = await createClient();
 
   if (password !== confirmPassword) {
     return { message: 'As senhas não coincidem.' };
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
   });
 
-  if (error) {
-    return { message: error.message };
+  if (authError) return { message: authError.message };
+
+  // Inserção na tabela User conforme o teu diagrama
+  if (authData.user) {
+    const { error: dbError } = await supabase
+      .from('User')
+      .insert([
+        {
+          id_login: authData.user.id,
+          user_name: userName,
+          last_name: lastName,
+          id_class: idClass // Agora incluído!
+        }
+      ]);
+
+    if (dbError) console.error("Erro ao salvar perfil:", dbError.message);
   }
 
   return { success: true, message: 'Cadastro realizado! Verifique seu e-mail.' };

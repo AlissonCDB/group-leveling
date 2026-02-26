@@ -1,137 +1,110 @@
 'use client'
 
 import { useState } from 'react'
+import { StyledInput, StyledTextArea, PrimaryButton, Label } from '@/components/UI/Form'
 
-export default function ModalAgendamento({ onClose }) {
-    // Estado para armazenar os dados do formulário baseados no seu diagrama
-    const [formData, setFormData] = useState({
-        meeting_date: '',
-        plataform_meeting: '',
-        disciplina: '',
-        conteudo: '',
-        tempo_estimado: ''
-    })
+export default function ModalAgendamento({ onFinish }) {
+  // Estado ajustado para bater com as colunas do seu diagrama (Meeting)
+  const [formData, setFormData] = useState({
+    meeting_date: '',
+    plataform_meeting: '',
+    disciplina: '',
+    conteudo: '',
+    tempo_estimado: '' // Mapeado de 'tempo estimado' do diagrama
+  })
 
-    // Função para atualizar o estado quando o usuário digita
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
-    // Função de envio (Simulação)
-    const handleSubmit = (e) => {
-        e.preventDefault(); // Evita recarregar a página
-        console.log("Dados da Raid para enviar ao Backend:", formData);
-        // Aqui você chamaria sua API futuramente
-        onClose();
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // O campo 'creator' (id_user) e 'created_at' devem ser tratados 
+    // preferencialmente na sua Server Action para segurança.
+    console.log("Dados da Raid para o Supabase:", formData);
+    
+    if (onFinish) onFinish();
+  }
 
-    return (
-        <div 
-            className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 px-4 backdrop-blur-sm"
-            onClick={onClose} // Fecha ao clicar fora
-        >
-            <div 
-                className="bg-white text-gray-800 p-6 rounded-xl w-full max-w-lg shadow-2xl relative"
-                onClick={(e) => e.stopPropagation()} // Impede que o clique dentro feche o modal
-            >
-                <div className="mb-6 border-b pb-2 border-gray-200">
-                    <h2 className="text-2xl font-extrabold text-purple-700">Agendar Nova Raid</h2>
-                    <p className="text-sm text-gray-500">Preencha os dados para criar seu grupo de estudo.</p>
-                </div>
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-purple-400 uppercase tracking-tighter">
+          Nova Raid de Estudo
+        </h2>
+        <p className="text-xs text-purple-300/60 uppercase tracking-widest mt-1">
+          Sincronizando com a base de dados de Missões
+        </p>
+      </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    
-                    {/* Linha 1: Disciplina e Plataforma */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Disciplina</label>
-                            <input 
-                                type="text" 
-                                name="disciplina"
-                                placeholder="Ex: Cálculo 1"
-                                value={formData.disciplina}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Plataforma</label>
-                            <input 
-                                type="text" 
-                                name="plataform_meeting"
-                                placeholder="Ex: Discord, Meet"
-                                value={formData.plataform_meeting}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {/* Linha 2: Data/Hora e Tempo Estimado */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Data e Hora</label>
-                            <input 
-                                type="datetime-local" 
-                                name="meeting_date"
-                                value={formData.meeting_date}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition text-gray-600"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Duração Estimada</label>
-                            <input 
-                                type="text" 
-                                name="tempo_estimado"
-                                placeholder="Ex: 1h 30min"
-                                value={formData.tempo_estimado}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Linha 3: Conteúdo (Textarea) */}
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Conteúdo / Detalhes</label>
-                        <textarea 
-                            name="conteudo"
-                            rows="3"
-                            placeholder="Descreva brevemente o que será estudado..."
-                            value={formData.conteudo}
-                            onChange={handleChange}
-                            className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition resize-none"
-                            required
-                        ></textarea>
-                    </div>
-
-                    {/* Botões de Ação */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
-                        <button 
-                            type="button"
-                            onClick={onClose} 
-                            className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
-                        >
-                            Cancelar
-                        </button>
-                        <button 
-                            type="submit"
-                            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 font-bold shadow-md hover:shadow-lg transition transform active:scale-95"
-                        >
-                            Confirmar Raid
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>Disciplina</Label>
+            <StyledInput 
+              name="disciplina"
+              placeholder="Ex: Cálculo I"
+              value={formData.disciplina}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label>Plataforma</Label>
+            <StyledInput 
+              name="plataform_meeting"
+              placeholder="Ex: Discord ou Meet"
+              value={formData.plataform_meeting}
+              onChange={handleChange}
+              required
+            />
+          </div>
         </div>
-    )
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label>Data da Meeting</Label>
+            <StyledInput 
+              type="datetime-local" 
+              name="meeting_date"
+              value={formData.meeting_date}
+              onChange={handleChange}
+              required
+              className="[scheme:dark]"
+            />
+          </div>
+          <div>
+            <Label>Tempo Estimado</Label>
+            <StyledInput 
+              type="time" // Definido como 'time' conforme seu diagrama
+              name="tempo_estimado"
+              value={formData.tempo_estimado}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label>Conteúdo (Objetivos)</Label>
+          <StyledTextArea 
+            name="conteudo"
+            rows="3"
+            placeholder="Descreva o que será farmado nesta raid..."
+            value={formData.conteudo}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="pt-4">
+          <PrimaryButton type="submit">
+            Registrar na Tabela de Missões
+          </PrimaryButton>
+        </div>
+      </form>
+    </div>
+  )
 }
