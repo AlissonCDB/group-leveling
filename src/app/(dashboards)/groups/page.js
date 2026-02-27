@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Modal from '@/components/UI/Modal';
 import ModalAgendamento from './ModalAgendamento.js';
-import ListagemRaids from './_components/ListagemRaids';
+import ModalAgendamentosAtivos from './ModalAgendamentosAtivos.js'; // Importe o novo componente
 
 export default function GroupsPage() {
   const [modalType, setModalType] = useState(null); // 'agendar' | 'ativas' | null
@@ -71,12 +71,13 @@ export default function GroupsPage() {
       <Modal 
         isOpen={modalType !== null} 
         onClose={closeModal}
-        maxWidth={modalType === 'agendar' ? '600px' : '480px'}
+        // Aumentei o maxWidth das ativas para 800px para caberem os cards lado a lado se você quiser futuramente
+        maxWidth={modalType === 'agendar' ? '600px' : '700px'}
       >
         {modalType === 'agendar' ? (
           <ModalAgendamento onFinish={closeModal} />
         ) : (
-          <ListagemRaids />
+          <ModalAgendamentosAtivos />
         )}
       </Modal>
     </div>
