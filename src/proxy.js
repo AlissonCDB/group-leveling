@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 
-export async function proxy(req) {
+// Usar 'export default' resolve o erro de exportação no Next.js 16/Turbopack
+export default async function proxy(req) {
   let res = NextResponse.next({
     request: {
       headers: req.headers,
@@ -10,7 +11,7 @@ export async function proxy(req) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, // Verifique se esta variável está correta no seu .env
     {
       cookies: {
         getAll() {
@@ -20,14 +21,14 @@ export async function proxy(req) {
           // Atualiza a requisição para que o getUser() veja os cookies novos imediatamente
           cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
 
-          // Recria a resposta para sincronizar os headers
+          // Sincroniza a resposta com os novos cabeçalhos
           res = NextResponse.next({
             request: {
               headers: req.headers,
             },
           });
 
-          // Define os cookies na resposta que será enviada ao navegador
+          // Define os cookies na resposta final para o navegador
           cookiesToSet.forEach(({ name, value, options }) =>
             res.cookies.set(name, value, options)
           );
@@ -36,10 +37,10 @@ export async function proxy(req) {
     }
   );
 
-  // Validação de segurança com Supabase
+  // Esta chamada só será feita nas rotas definidas no matcher abaixo
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Proteção de rotas
+  // Redireciona se não houver usuário autenticado
   if (!user) {
     const url = new URL("/", req.url);
     url.searchParams.set("from", req.nextUrl.pathname);
@@ -49,7 +50,7 @@ export async function proxy(req) {
   return res;
 }
 
-// O config continua igual, mas agora o Next.js procura pela função 'proxy' acima
+// O matcher garante que o proxy NÃO rode na '/' (Login) ou em '/assets'
 export const config = {
   matcher: [
     "/home/:path*",

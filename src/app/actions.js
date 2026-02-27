@@ -9,32 +9,23 @@ export async function authenticate(previousState, formData) {
   const password = formData.get('password');
   const supabase = await createClient();
 
-  // 1. Tenta realizar o login
-  const { error: signInError } = await supabase.auth.signInWithPassword({
+  // O signInWithPassword já retorna o 'user' se for bem-sucedido
+  const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  // Se houver erro nas credenciais, retorna a mensagem
-  if (signInError) {
-    return { message: 'Credenciais inválidas. Verifique seu e-mail e senha.' };
+  if (signInError || !data.user) {
+    return { message: 'Credenciais inválidas.' };
   }
 
-  // 2. Valida se o usuário realmente existe na sessão
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    await supabase.auth.signOut();
-    return { message: 'Erro ao validar sessão. Tente fazer login novamente.' };
-  }
-
-  await supabase
+  // Agora só precisa de verificar o acesso, eliminando o getUser() redundante
+  const { data: access } = await supabase
     .from('user_access')
     .select('access_level')
-    .eq('user_id', user.id)
+    .eq('user_id', data.user.id)
     .single();
 
-  // 3. Redirecionamento forçado para /home
   revalidatePath('/', 'layout');
   redirect('/home');
 }
