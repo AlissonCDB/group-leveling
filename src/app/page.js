@@ -11,7 +11,7 @@ export default function Home() {
   const [isRegister, setIsRegister] = useState(false); 
 
   return (
-    <main className="relative flex w-screen min-h-screen min-h-100dvh overflow-hidden items-center justify-center bg-gray-950">
+    <main className="relative flex w-screen min-h-100dvh overflow-hidden items-center justify-center bg-gray-950">
       
       {/* BACKGROUND */}
       <div className="absolute inset-0 z-0">
