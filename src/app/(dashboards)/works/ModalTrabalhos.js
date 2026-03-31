@@ -1,8 +1,6 @@
 'use client';
 
 import { useActionState, useEffect } from 'react';
-// IMPORTANTE: Verifique se o seu arquivo é 'action.js' ou 'actions.js'
-// Se o arquivo for action.js, use o caminho abaixo:
 import { publishWorkAction } from '@/app/actions'; 
 import { StyledInput, StyledTextArea, PrimaryButton, Label } from '@/components/UI/Form';
 
@@ -79,7 +77,7 @@ export default function ModalTrabalhos({ onFinish }) {
         <div>
           <Label>Observações (Opcional)</Label>
           <StyledTextArea 
-            name="conteudo" 
+            name="graduation" 
             rows={3} 
             placeholder="Algum detalhe importante sobre o envio?" 
           />

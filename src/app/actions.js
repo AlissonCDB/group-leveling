@@ -136,15 +136,14 @@ export async function createMeetingAction(previousState, formData) {
   }
 }
 
-// --- NOVA FUNÇÃO ADICIONADA ABAIXO ---
 export async function publishWorkAction(previousState, formData) {
   const supabase = await createClient();
 
-  // 1. Validar utilizador no Auth (Igual ao createMeetingAction)
+  // 1. Validação de Auth
   const { data: { user: authUser } } = await supabase.auth.getUser();
   if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
 
-  // 2. Buscar o ID numérico (bigint) do utilizador na tabela "User" (Padrão de segurança)
+  // 2. Busca o perfil (Padrão de segurança que você já usa)
   const { data: userData, error: userError } = await supabase
     .from('User')
     .select('id')
@@ -152,20 +151,20 @@ export async function publishWorkAction(previousState, formData) {
     .single();
 
   if (userError || !userData) {
-    return { success: false, message: "Perfil não encontrado no banco de dados." };
+    return { success: false, message: "Perfil não encontrado." };
   }
 
   try {
     const arquivo = formData.get('arquivo');
-    const disciplina = formData.get('disciplina'); 
-    const tema = formData.get('tema');
+    const disciplina = formData.get('disciplina'); // No DB será 'subject'
+    const tema = formData.get('tema');             // No DB será 'type' ou 'subject'
+    const graduation = formData.get('graduation'); // Campo novo que adicionamos no Modal
 
-    // Validação básica de arquivo
     if (!arquivo || arquivo.size === 0) {
-      return { success: false, message: "O arquivo é obrigatório para o upload." };
+      return { success: false, message: "O arquivo é obrigatório." };
     }
 
-    // 3. Upload para o Storage (Organizado por ID do usuário para evitar conflitos)
+    // 3. Upload para o Storage
     const fileExt = arquivo.name.split('.').pop();
     const fileName = `${userData.id}/${Date.now()}.${fileExt}`;
 
@@ -175,37 +174,30 @@ export async function publishWorkAction(previousState, formData) {
 
     if (storageError) throw storageError;
 
-    // 4. Obter URL pública do arquivo
+    // 4. URL Pública
     const { data: { publicUrl } } = supabase.storage
       .from('trabalhos_arquivos')
       .getPublicUrl(fileName);
 
-    // 5. Inserir na tabela 'Work' seguindo o mapeamento da sua imagem
-    // Nota: Se a sua tabela 'Work' tiver uma coluna para o autor, 
-    // você pode adicionar 'user_id: userData.id' aqui.
+    // 5. Inserção no Banco (Mapeamento seguindo seu SQL)
     const { error: dbError } = await supabase
       .from('Work')
       .insert([
         {
-          type: 'Trabalho Acadêmico', // Coluna 'type'
-          archive: publicUrl,          // Coluna 'archive'
-          graduation: disciplina,      // Coluna 'graduation'
-          subject: tema,               // Coluna 'subject'
+          type: tema,               // Ex: "TCC", "Exercício"
+          subject: disciplina,      // Ex: "Banco de Dados"
+          archive: publicUrl,       // Link do arquivo
+          graduation: graduation    // Ex: "Análise e Desenv. de Sistemas"
         }
       ]);
 
     if (dbError) throw dbError;
 
-    // 6. Revalidar o caminho para atualizar a lista de trabalhos
     revalidatePath('/trabalhos');
-    
     return { success: true, message: "ARTEFATO SINCRONIZADO COM SUCESSO! 🚀" };
 
   } catch (error) {
-    console.error("Erro no processamento do Trabalho:", error);
-    return { 
-      success: false, 
-      message: "FALHA NA TRANSMISSÃO: " + (error.message || "Erro desconhecido") 
-    };
+    console.error("Erro:", error);
+    return { success: false, message: "FALHA NA TRANSMISSÃO: " + error.message };
   }
 }

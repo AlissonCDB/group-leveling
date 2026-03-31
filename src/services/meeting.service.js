@@ -1,5 +1,3 @@
-// REMOVA o import { createClient } ... daqui
-
 export const meetingService = {
     /**
      * @param {Object} supabase - Instância (client ou server) passada por quem chama

@@ -77,9 +77,9 @@ export default function RegisterForm() {
 
         <div className="w-full h-px bg-linear-to-r from-transparent via-purple-500/50 to-transparent my-2" />
 
-        <p className="text-[10px] text-green-400 font-bold uppercase tracking-widest animate-pulse">
+        {/*<p className="text-[10px] text-green-400 font-bold uppercase tracking-widest animate-pulse">
           Sua conta foi criada. Verifique seu e-mail para despertar!
-        </p>
+        </p> */ }
       </div>
     );
   }

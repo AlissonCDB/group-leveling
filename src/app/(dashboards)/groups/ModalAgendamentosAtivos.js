@@ -9,23 +9,32 @@ export default function ModalAgendamentosAtivos() {
   const [raids, setRaids] = useState([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
+  // Ocultar nav no modal
+  useEffect(() => {
+    document.documentElement.classList.add('modal-open-raid');
+
+    return () => {
+      document.documentElement.classList.remove('modal-open-raid');
+    };
+  }, []);
+
+  useEffect(() => {
     async function loadRaids() {
       // Cria a instância específica para o navegador
-      const supabase = createClient(); 
-      
+      const supabase = createClient();
+
       try {
         // Passa a instância para o serviço
-        const data = await meetingService.getActiveRaids(supabase); 
+        const data = await meetingService.getActiveRaids(supabase);
         setRaids(data);
       } catch (err) {
         console.error("Erro ao carregar raids:", err);
       } finally {
         // ESTA LINHA É ESSENCIAL para sair do estado de "Escaneando..."
-        setLoading(false); 
+        setLoading(false);
       }
     }
-    
+
     loadRaids();
   }, []);
 
@@ -56,8 +65,8 @@ useEffect(() => {
           </div>
         ) : (
           raids.map((raid) => (
-            <div 
-              key={raid.id} 
+            <div
+              key={raid.id}
               className="relative p-5 bg-gray-950/50 border border-purple-500/20 rounded-lg group hover:border-purple-500/50 transition-all duration-300"
             >
               <div className="flex justify-between items-start mb-3">
@@ -97,14 +106,14 @@ useEffect(() => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col text-right">
                   <span className="text-[9px] text-gray-500 font-bold uppercase">Duração</span>
                   <span className="text-xs font-bold text-gray-300">{raid.duration}</span>
                 </div>
               </div>
 
-              <PrimaryButton 
+              <PrimaryButton
                 style={{ marginTop: '1.25rem', padding: '0.6rem', fontSize: '0.75rem' }}
                 onClick={() => alert('Entrada em Raid: Implementação em breve!')}
               >

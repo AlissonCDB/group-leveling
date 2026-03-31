@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // 1. Importar o router
+import { ArrowBigLeft } from 'lucide-react';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState('start');
@@ -40,7 +41,7 @@ export default function Home() {
             </button>
 
             <p className="text-purple-300/50 font-mono text-sm animate-bounce mt-4">
-              ▼ CLIQUE PARA INICIAR ▼
+              CLIQUE PARA INICIAR
             </p>
           </div>
         )}
@@ -51,7 +52,7 @@ export default function Home() {
               onClick={() => setCurrentStep('start')}
               className="absolute -top-12 left-0 text-purple-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest text-xs font-bold"
             >
-              ◀ Voltar ao início
+              <ArrowBigLeft/> Voltar ao início
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

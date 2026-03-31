@@ -27,10 +27,25 @@ export const StyledInput = styled.input`
   color: #ffffff;
   font-size: 0.95rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Garante que o seletor (pop-up) do sistema também seja dark */
+  color-scheme: dark;
 
   &::placeholder { 
     color: rgba(168, 85, 247, 0.4); 
     font-size: 0.85rem;
+  }
+
+  /* Estiliza o ícone do reloginho */
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(242deg) brightness(98%) contrast(92%);
+    /* O filtro acima transforma o ícone preto em um roxo próximo ao #a855f7 */
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.2);
+    }
   }
 
   &:focus {
@@ -41,7 +56,7 @@ export const StyledInput = styled.input`
     transform: scale(1.01);
   }
 
-  /* Reset Autocomplete para manter o tema escuro */
+  /* Reset Autocomplete */
   &:-webkit-autofill {
     -webkit-text-fill-color: #fff;
     -webkit-box-shadow: 0 0 0px 1000px #0f172a inset;

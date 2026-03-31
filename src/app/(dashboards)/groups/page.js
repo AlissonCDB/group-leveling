@@ -8,18 +8,17 @@ import ModalAgendamentosAtivos from './ModalAgendamentosAtivos.js'; // Importe o
 
 export default function GroupsPage() {
   const [modalType, setModalType] = useState(null); // 'agendar' | 'ativas' | null
-
   const closeModal = () => setModalType(null);
 
-  const overlayBoxStyle = "flex flex-col items-center justify-center text-white text-center border-2 border-purple-500/40 rounded-xl p-8 backdrop-blur-sm bg-black/40 transition-all duration-500 group-hover:bg-purple-600/80 group-hover:scale-105 group-hover:border-purple-300 shadow-2xl";
+  const overlayBoxStyle = "flex flex-col items-center w-[90%] h-[30%] md:w-[80%] justify-center text-white text-center border-2 border-purple-500/40 rounded-xl p-2 backdrop-blur-sm bg-black/40 transition-all duration-500 group-hover:bg-purple-600/80 group-hover:scale-105 group-hover:border-purple-300 shadow-2xl";
 
   return (
-    <div className="flex w-screen h-screen relative bg-gray-950 overflow-hidden">
-      
+    <div className="flex flex-col md:flex-row w-screen h-screen relative bg-gray-950 overflow-hidden">
+
       {/* LADO ESQUERDO: BUSCAR RAIDS */}
       <button
         onClick={() => setModalType('ativas')}
-        className="group relative w-1/2 h-full overflow-hidden focus:outline-none"
+        className="group relative w-full h-1/2 md:w-1/2 md:h-full overflow-hidden focus:outline-none"
       >
         <Image
           src="/assets/entrarGrupo.png"
@@ -34,7 +33,7 @@ export default function GroupsPage() {
               Raids Ativas
             </h2>
             <p className="text-xs font-bold text-purple-200 uppercase tracking-[0.3em]">
-              Explorar Guildas
+              Explorar grupos de estudos agendados
             </p>
           </div>
         </div>
@@ -43,7 +42,7 @@ export default function GroupsPage() {
       {/* LADO DIREITO: CRIAR RAID */}
       <button
         onClick={() => setModalType('agendar')}
-        className="group relative w-1/2 h-full overflow-hidden focus:outline-none"
+        className="group relative w-full h-1/2 md:w-1/2 md:h-full overflow-hidden focus:outline-none"
       >
         <Image
           src="/assets/criarGrupo.png"
@@ -58,7 +57,7 @@ export default function GroupsPage() {
               Agendar Raid
             </h2>
             <p className="text-xs font-bold text-purple-200 uppercase tracking-[0.3em]">
-              Nova Missão
+              Agendar grupo de estudo
             </p>
           </div>
         </div>
@@ -68,11 +67,10 @@ export default function GroupsPage() {
       <div className="absolute left-1/2 top-0 h-full w-1px bg-linear-to-b from-transparent via-purple-500 to-transparent z-20 opacity-50" />
 
       {/* MODAL UNIFICADO */}
-      <Modal 
-        isOpen={modalType !== null} 
+      <Modal
+        isOpen={modalType !== null}
         onClose={closeModal}
-        // Aumentei o maxWidth das ativas para 800px para caberem os cards lado a lado se você quiser futuramente
-        maxWidth={modalType === 'agendar' ? '600px' : '700px'}
+        closeOnOverlayClick={false}
       >
         {modalType === 'agendar' ? (
           <ModalAgendamento onFinish={closeModal} />

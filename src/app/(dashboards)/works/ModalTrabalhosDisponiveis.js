@@ -88,7 +88,7 @@ export default function ModalTrabalhosDisponiveis() {
                    <div className="w-8 h-8 rounded bg-purple-600/20 flex items-center justify-center text-purple-400">
                       📄
                    </div>
-                   <span className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-[150px]">
+                   <span className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-150px">
                       {item.archive.split('/').pop()}
                    </span>
                 </div>
