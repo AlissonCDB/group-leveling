@@ -6,6 +6,29 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: scale(1); }
 `;
 
+export const NavsContainer = styled.nav`
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  background-color: #9333ea; 
+  border-radius: 0 0 25px 0;
+  color: #ffffff;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  padding: 10px;
+
+  @media (min-width: 768px) {
+  width: 120px;
+  justify-content: space-between;
+  }
+`
+
 // O Overlay que usa o backdrop-blur do CSS moderno
 export const ModalOverlay = styled.div`
   position: fixed;

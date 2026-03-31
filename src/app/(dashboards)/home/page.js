@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation'; // 1. Importar o router
+import { ArrowBigLeft } from 'lucide-react';
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState('start');
@@ -10,7 +11,7 @@ export default function Home() {
   // 3. Adicionar a propriedade 'path' em cada opção
   const menuOptions = [
     { name: 'Agendamentos', path: '/groups', color: 'from-purple-600 to-indigo-600' },
-    { name: 'Trabalhos', path: '/trabalhos', color: 'from-blue-600 to-cyan-600' },
+    { name: 'Trabalhos', path: '/works', color: 'from-blue-600 to-cyan-600' },
     { name: 'Minijogos', path: '/minijogos', color: 'from-pink-600 to-rose-600' },
     { name: 'Ranqueamentos', path: '/ranqueamentos', color: 'from-amber-500 to-orange-600' },
   ];
@@ -40,7 +41,7 @@ export default function Home() {
             </button>
 
             <p className="text-purple-300/50 font-mono text-sm animate-bounce mt-4">
-              ▼ CLIQUE PARA INICIAR ▼
+              CLIQUE PARA INICIAR
             </p>
           </div>
         )}
@@ -51,7 +52,7 @@ export default function Home() {
               onClick={() => setCurrentStep('start')}
               className="absolute -top-12 left-0 text-purple-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest text-xs font-bold"
             >
-              ◀ Voltar ao início
+              <ArrowBigLeft/> Voltar ao início
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

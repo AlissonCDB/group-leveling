@@ -28,7 +28,7 @@ export default function Home() {
 
       {/* BOTÃO FLUTUANTE PADRONIZADO */}
       {!isLoginOpen && (
-        <div className="absolute bottom-10 right-10 z-10 w-auto">
+        <div className="absolute bottom-10 right-10 z-10 w-auto sm-flex sm-justify-end sm-items-center">
           <PrimaryButton 
             onClick={() => setIsLoginOpen(true)}
             style={{ width: 'auto', padding: '1rem 2.5rem', marginTop: 0 }}
