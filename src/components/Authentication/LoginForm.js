@@ -11,7 +11,7 @@ export default function LoginForm() {
       <div className="space-y-4">
         <div>
           <Label>Email</Label>
-          <StyledInput name="email" type="email" placeholder="nome@exemplo.com" required />
+          <StyledInput name="email" type="email" placeholder="nome@gmail.com" required />
         </div>
         <div>
           <Label>Senha</Label>

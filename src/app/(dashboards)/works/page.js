@@ -19,7 +19,7 @@ export default function TrabalhosPage() {
 
   const closeModal = () => setModalType(null);
 
-  const overlayBoxStyle = "flex flex-col items-center w-[90%] h-[30%] md:w-[80%] justify-center text-white text-center border-2 border-purple-500/40 rounded-xl p-2 backdrop-blur-sm bg-black/40 transition-all duration-500 group-hover:bg-purple-600/80 group-hover:scale-105 group-hover:border-purple-300 shadow-2xl";
+  const overlayBoxStyle = "flex flex-col items-center w-[90%] min-h-[40%] md:h-[30%] md:w-[80%] justify-center text-white text-center border-2 border-purple-500/40 rounded-xl p-2 backdrop-blur-sm bg-black/40 transition-all duration-500 group-hover:bg-purple-600/80 group-hover:scale-105 group-hover:border-purple-300 shadow-2xl";
 
   return (
     <div className="flex flex-col md:flex-row w-screen h-screen relative bg-gray-950 overflow-hidden">

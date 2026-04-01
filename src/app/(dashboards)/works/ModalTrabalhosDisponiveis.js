@@ -10,11 +10,11 @@ export default function ModalTrabalhosDisponiveis() {
 
   useEffect(() => {
     async function loadWork() {
-      const supabase = createClient(); 
-      
+      const supabase = createClient();
+
       try {
         const { data, error } = await supabase
-          .from('Work') 
+          .from('Work')
           .select('*')
           .order('id', { ascending: false });
 
@@ -23,12 +23,21 @@ export default function ModalTrabalhosDisponiveis() {
       } catch (err) {
         console.error("Erro ao carregar do radar Work:", err);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     }
-    
+
     loadWork();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.add('modal-open-raid');
+
+    return () => {
+      document.documentElement.classList.remove('modal-open-raid');
+    };
+  }, []);
+
 
   if (loading) {
     return (
@@ -41,7 +50,7 @@ export default function ModalTrabalhosDisponiveis() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-h-[80vh]">
+    <div className="w-full h-full overflow-auto scrollbar-hide">
       <div className="text-center">
         <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
           Trabalhos Disponíveis
@@ -51,15 +60,15 @@ export default function ModalTrabalhosDisponiveis() {
         </p>
       </div>
 
-      <div className="grid gap-4 overflow-y-auto pr-2 custom-scrollbar pb-4">
+      <div className="grid gap-4 pt-1">
         {trabalhos.length === 0 ? (
           <div className="py-10 text-center border border-dashed border-purple-500/20 rounded-lg">
             <p className="text-gray-500 italic text-sm">Nenhum arquivo encontrado...</p>
           </div>
         ) : (
           trabalhos.map((item) => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className="relative p-5 bg-gray-950/50 border border-purple-500/20 rounded-lg group hover:border-purple-500/50 transition-all duration-300"
             >
               <div className="flex justify-between items-start mb-3">
@@ -85,17 +94,17 @@ export default function ModalTrabalhosDisponiveis() {
               {/* Botão de Download do Arquivo real */}
               <div className="mt-4 pt-4 border-t border-purple-500/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                   <div className="w-8 h-8 rounded bg-purple-600/20 flex items-center justify-center text-purple-400">
-                      📄
-                   </div>
-                   <span className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-150px">
-                      {item.archive.split('/').pop()}
-                   </span>
+                  <div className="w-8 h-8 rounded bg-purple-600/20 flex items-center justify-center text-purple-400">
+                    📄
+                  </div>
+                  <span className="text-[10px] text-gray-400 uppercase font-mono truncate max-w-150px">
+                    {item.archive.split('/').pop()}
+                  </span>
                 </div>
 
-                <a 
-                  href={item.archive} 
-                  target="_blank" 
+                <a
+                  href={item.archive}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black uppercase rounded-lg transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                 >

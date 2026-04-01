@@ -50,7 +50,7 @@ export default function Home() {
           <div className="relative w-full max-w-2xl animate-in slide-in-from-bottom-10 duration-500">
             <button
               onClick={() => setCurrentStep('start')}
-              className="absolute -top-12 left-0 text-purple-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest text-xs font-bold"
+              className="absolute -top-12 left-0 text-purple-400 hover:text-white transition-colors hidden md:flex items-center gap-2 uppercase tracking-widest text-xs font-bold"
             >
               <ArrowBigLeft/> Voltar ao início
             </button>
@@ -65,7 +65,7 @@ export default function Home() {
                 >
                   <div className={`absolute inset-0 bg-linear-to-r ${option.color} opacity-80 group-hover:opacity-100 transition-opacity`} />
 
-                  <div className="relative bg-gray-900/90 rounded-[14px] py-10 flex flex-col items-center justify-center gap-3 backdrop-blur-md">
+                  <div className="relative bg-gray-900/90 md:rounded-[14px] py-1 md:py-10 flex flex-col items-center justify-center backdrop-blur-md">
                     <span className="text-2xl font-black text-white uppercase tracking-tighter group-hover:tracking-widest transition-all duration-500">
                       {option.name}
                     </span>

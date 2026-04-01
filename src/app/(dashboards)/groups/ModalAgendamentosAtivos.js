@@ -48,7 +48,7 @@ export default function ModalAgendamentosAtivos() {
     );
   }
   return (
-    <div className="flex flex-col gap-6 max-h-[80vh]">
+    <div className='w-full h-full overflow-auto scrollbar-hide'>
       <div className="text-center">
         <h2 className="text-3xl font-black text-white uppercase tracking-tighter">
           Raids Disponíveis
@@ -58,7 +58,7 @@ export default function ModalAgendamentosAtivos() {
         </p>
       </div>
 
-      <div className="grid gap-4 overflow-y-auto pr-2 custom-scrollbar pb-4">
+      <div className="grid gap-4 pt-1">
         {raids.length === 0 ? (
           <div className="py-10 text-center border border-dashed border-purple-500/20 rounded-lg">
             <p className="text-gray-500 italic text-sm">Nenhuma raid ativa encontrada no radar...</p>
