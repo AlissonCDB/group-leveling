@@ -88,6 +88,11 @@ const CloseButton = styled.button`
     color: #c084fc;
     border-color: #a855f7;
   }
+
+    @media (min-width: 768px) {
+      right: 0;
+      top: 0.5rem;
+  }
 `;
 
 export default function Modal({

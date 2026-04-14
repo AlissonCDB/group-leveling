@@ -118,14 +118,21 @@ export async function createMeetingAction(previousState, formData) {
   }
 
   try {
+    // Caso o tema venha vazio (embora agora seja obrigatório no form), fazemos o parsing seguro
+    const themeId = formData.get('theme');
+    const parsedTheme = themeId ? parseInt(themeId) : null;
+
     // 3. Mapear dados do formulário para as colunas do SQL
     await meetingService.createRaid(supabase, {
-      creator: userData.id, // bigint
-      meeting_date: formData.get('meeting_date'), // timestamp
-      plataform_meeting: formData.get('plataform_meeting'),
-      discipline: formData.get('disciplina'), // Mapeia 'disciplina' -> 'discipline'
-      content: formData.get('conteudo'),      // Mapeia 'conteudo' -> 'content'
-      duration: formData.get('tempo_estimado'), // Mapeia 'tempo_estimado' -> 'duration'
+      creator: userData.id,
+      meeting_date: formData.get('meeting_date'),
+      plataform_meeting: parseInt(formData.get('plataform_meeting')),
+      meeting_tamplate: parseInt(formData.get('meeting_tamplate')),
+      group_category: parseInt(formData.get('group_category')),
+      adress: formData.get('adress'),
+      theme: parsedTheme,
+      content: formData.get('conteudo'),
+      duration: formData.get('tempo_estimado'),
     });
 
     revalidatePath('/groups');
@@ -133,6 +140,36 @@ export async function createMeetingAction(previousState, formData) {
   } catch (error) {
     console.error("Erro Supabase:", error);
     return { success: false, message: "Erro ao registar raid. Verifique os dados." };
+  }
+}
+
+export async function updateMeetingAction(previousState, formData) {
+  const supabase = await createClient();
+
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+
+  try {
+    const meetingId = formData.get('meeting_id');
+    const themeId = formData.get('theme');
+    const parsedTheme = themeId ? parseInt(themeId) : null;
+
+    await meetingService.updateRaid(supabase, meetingId, {
+      meeting_date: formData.get('meeting_date'),
+      plataform_meeting: parseInt(formData.get('plataform_meeting')),
+      meeting_tamplate: parseInt(formData.get('meeting_tamplate')),
+      group_category: parseInt(formData.get('group_category')),
+      adress: formData.get('adress'),
+      theme: parsedTheme,
+      content: formData.get('conteudo'),
+      duration: formData.get('tempo_estimado'),
+    });
+
+    revalidatePath('/groups');
+    return { success: true, message: "Raid atualizada com sucesso!" };
+  } catch (error) {
+    console.error("Erro Supabase Update:", error);
+    return { success: false, message: "Erro ao atualizar raid. Verifique os dados." };
   }
 }
 

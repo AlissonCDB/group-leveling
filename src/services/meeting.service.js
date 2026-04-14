@@ -24,10 +24,26 @@ export const meetingService = {
                   user_name,
                   last_name,
                   Class ( name_class )
-                )
+                ),
+                plataform_meeting ( option ),
+                theme ( option ),
+                meeting_tamplate ( option ),
+                group_category ( option )
             `)
             .gte('meeting_date', now)
             .order('meeting_date', { ascending: true });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async updateRaid(supabase, meetingId, meetingData) {
+        const { data, error } = await supabase
+            .from('Meeting')
+            .update(meetingData)
+            .eq('id', meetingId)
+            .select()
+            .single();
 
         if (error) throw error;
         return data;
