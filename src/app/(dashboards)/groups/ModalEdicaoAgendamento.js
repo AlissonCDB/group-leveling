@@ -117,7 +117,7 @@ export default function ModalEdicaoAgendamento({ raidData, onFinish }) {
   return (
     <div className="animate-fade-in w-full">
       <div className="mb-6 text-center">
-        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-200 uppercase tracking-tighter">
+        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-amber-200 uppercase tracking-tighter">
           Editar Raid
         </h2>
         <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">
