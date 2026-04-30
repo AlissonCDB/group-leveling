@@ -38,11 +38,7 @@ export default function Home() {
     },
     { 
         name: 'Ranqueamento', 
-<<<<<<< HEAD
-        path: '/ranqueamentos', 
-=======
         path: '/ranks', 
->>>>>>> 3623536 (modelo inicial da tela de ranqueamentos)
         icon: Trophy,
         desc: 'Acompanhe o seu progresso, compare o seu nível e lute pelo topo da guilda.',
         theme: {
