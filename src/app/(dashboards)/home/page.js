@@ -37,18 +37,18 @@ export default function Home() {
         line: 'bg-blue-500'
       }
     },
-    {
-      name: 'Ranqueamento',
-      path: '/ranqueamentos',
-      icon: Trophy,
-      desc: 'Acompanhe o seu progresso, compare o seu nível e lute pelo topo da guilda.',
-      theme: {
-        border: 'border-amber-500/30 group-hover:border-amber-400',
-        shadow: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]',
-        textHover: 'group-hover:text-amber-400',
-        bgIcon: 'bg-amber-900/30 text-amber-400 border-amber-500/30',
-        line: 'bg-amber-500'
-      }
+    { 
+        name: 'Ranqueamento', 
+        path: '/ranks', 
+        icon: Trophy,
+        desc: 'Acompanhe o seu progresso, compare o seu nível e lute pelo topo da guilda.',
+        theme: {
+            border: 'border-amber-500/30 group-hover:border-amber-400',
+            shadow: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+            textHover: 'group-hover:text-amber-400',
+            bgIcon: 'bg-amber-900/30 text-amber-400 border-amber-500/30',
+            line: 'bg-amber-500'
+        }
     },
   ];
 
