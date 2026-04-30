@@ -9,7 +9,7 @@ export default function RaidSidebar({ onOpenCreateModal }) {
             <div className="absolute inset-0 bg-[url('/assets/background.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
             
             <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-purple-900/50 rounded-full border-2 border-purple-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(168,85,247,0.5)]">
+                <div className="hidden w-20 h-20 bg-purple-900/50 rounded-full border-2 border-purple-400 md:flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(168,85,247,0.5)]">
                     <Users size={40} className="text-purple-200" />
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 drop-shadow-lg">

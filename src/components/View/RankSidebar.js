@@ -13,7 +13,7 @@ export default function RankSidebar() {
             
             <div className="relative z-10 flex flex-col items-center text-center">
                 {/* Ícone e Brilho Âmbar */}
-                <div className="w-20 h-20 bg-amber-900/50 rounded-full border-2 border-amber-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(245,158,11,0.5)]">
+                <div className="hidden md:flex w-20 h-20 bg-amber-900/50 rounded-full border-2 border-amber-400  items-center justify-center mb-6 shadow-[0_0_20px_rgba(245,158,11,0.5)]">
                     <Trophy size={40} className="text-amber-200" />
                 </div>
                 
@@ -26,7 +26,7 @@ export default function RankSidebar() {
                 </p>
 
                 {/* Botão de Voltar ao Início */}
-                <PrimaryButton onClick={() => router.push('/')} style={{ padding: '1rem 2rem', width: 'auto' }}>
+                <PrimaryButton onClick={() => router.push('/home')} style={{ padding: '1rem 2rem', width: 'auto' }}>
                     <span className="flex items-center gap-2 text-sm md:text-base">
                         <ArrowLeft size={20} />
                         VOLTAR AO MENU

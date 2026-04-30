@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // <-- Importado o useRouter
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { meetingService } from '@/services/meeting.service';
 import { MonitorPlay } from 'lucide-react'; 
@@ -16,7 +16,7 @@ import RaidFilters from '@/components/View/RaidFilters';
 import RaidCard from '@/components/View/RaidCard';
 
 export default function GroupsPage() {
-    const router = useRouter(); // <-- Inicializado o router
+    const router = useRouter();
 
     const [raids, setRaids] = useState([]);
     const [categories, setCategories] = useState([]); 
@@ -64,7 +64,7 @@ export default function GroupsPage() {
         setIsEditModalOpen(true);
     };
 
-    // <-- Função para redirecionar para a sala da Raid
+    //Função para redirecionar para a sala da Raid
     const handleEnterRaid = (raidId) => {
         router.push(`/groups/${raidId}`);
     };

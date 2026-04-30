@@ -23,6 +23,7 @@ export default function FloatingNav() {
     { name: 'Início', path: '/home', icon: <Home />, color: 'rgba(100, 100, 100, 0.5)' },
     { name: 'Grupos', path: '/groups', icon: <Users />, color: 'rgba(100, 100, 100, 0.5)' },
     { name: 'Trabalhos', path: '/works', icon: <NotebookPen />, color: 'rgba(100, 100, 100, 0.5)' },
+    { name: 'Ranks', path: '/ranks', icon: <NotebookPen />, color: 'rgba(100, 100, 100, 0.5)' },
     { name: 'Perfil', path: '/profile', icon: <User />, color: 'rgba(100, 100, 100, 0.5)' },
   ];
 

@@ -72,7 +72,7 @@ export default function ProfilePage() {
                     ) : (
                         <>
                             {/* Avatar */}
-                            <div className="w-24 h-24 bg-slate-900/50 rounded-full border-2 border-slate-400 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(148,163,184,0.3)]">
+                            <div className="hidden md:flex w-24 h-24 bg-slate-900/50 rounded-full border-2 border-slate-400 items-center justify-center mb-6 shadow-[0_0_30px_rgba(148,163,184,0.3)]">
                                 <User size={48} className="text-slate-300" />
                             </div>
                             
