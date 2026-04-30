@@ -15,9 +15,11 @@ export const Label = styled.label`
   margin-bottom: 0.5rem;
   display: block;
   text-shadow: 0 0 8px rgba(192, 132, 252, 0.4);
+  
 `;
 
 export const StyledInput = styled.input`
+  text-align: center;
   width: 100%;
   padding: 0.8rem 1rem;
   background: rgba(15, 23, 42, 0.7); 
@@ -65,7 +67,6 @@ export const StyledInput = styled.input`
 
 export const PrimaryButton = styled.button`
   width: 100%;
-  margin-top: 1rem;
   padding: 1rem;
   color: white;
   font-weight: 900;
@@ -132,6 +133,7 @@ export const StyledTextArea = styled.textarea`
   font-family: inherit;
   transition: all 0.3s ease;
   resize: none;
+  text-align: center;
 
   &:focus {
     outline: none;

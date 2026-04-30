@@ -118,14 +118,21 @@ export async function createMeetingAction(previousState, formData) {
   }
 
   try {
+    // Caso o tema venha vazio (embora agora seja obrigatório no form), fazemos o parsing seguro
+    const themeId = formData.get('theme');
+    const parsedTheme = themeId ? parseInt(themeId) : null;
+
     // 3. Mapear dados do formulário para as colunas do SQL
     await meetingService.createRaid(supabase, {
-      creator: userData.id, // bigint
-      meeting_date: formData.get('meeting_date'), // timestamp
-      plataform_meeting: formData.get('plataform_meeting'),
-      discipline: formData.get('disciplina'), // Mapeia 'disciplina' -> 'discipline'
-      content: formData.get('conteudo'),      // Mapeia 'conteudo' -> 'content'
-      duration: formData.get('tempo_estimado'), // Mapeia 'tempo_estimado' -> 'duration'
+      creator: userData.id,
+      meeting_date: formData.get('meeting_date'),
+      plataform_meeting: parseInt(formData.get('plataform_meeting')),
+      meeting_tamplate: parseInt(formData.get('meeting_tamplate')),
+      group_category: parseInt(formData.get('group_category')),
+      adress: formData.get('adress'),
+      theme: parsedTheme,
+      content: formData.get('conteudo'),
+      duration: formData.get('tempo_estimado'),
     });
 
     revalidatePath('/groups');
@@ -136,68 +143,190 @@ export async function createMeetingAction(previousState, formData) {
   }
 }
 
-export async function publishWorkAction(previousState, formData) {
+export async function updateMeetingAction(previousState, formData) {
   const supabase = await createClient();
 
-  // 1. Validação de Auth
   const { data: { user: authUser } } = await supabase.auth.getUser();
   if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
 
-  // 2. Busca o perfil (Padrão de segurança que você já usa)
-  const { data: userData, error: userError } = await supabase
-    .from('User')
-    .select('id')
-    .eq('id_login', authUser.id)
-    .single();
-
-  if (userError || !userData) {
-    return { success: false, message: "Perfil não encontrado." };
-  }
-
   try {
-    const arquivo = formData.get('arquivo');
-    const disciplina = formData.get('disciplina'); // No DB será 'subject'
-    const tema = formData.get('tema');             // No DB será 'type' ou 'subject'
-    const graduation = formData.get('graduation'); // Campo novo que adicionamos no Modal
+    const meetingId = formData.get('meeting_id');
+    const themeId = formData.get('theme');
+    const parsedTheme = themeId ? parseInt(themeId) : null;
 
-    if (!arquivo || arquivo.size === 0) {
-      return { success: false, message: "O arquivo é obrigatório." };
+    await meetingService.updateRaid(supabase, meetingId, {
+      meeting_date: formData.get('meeting_date'),
+      plataform_meeting: parseInt(formData.get('plataform_meeting')),
+      meeting_tamplate: parseInt(formData.get('meeting_tamplate')),
+      group_category: parseInt(formData.get('group_category')),
+      adress: formData.get('adress'),
+      theme: parsedTheme,
+      content: formData.get('conteudo'),
+      duration: formData.get('tempo_estimado'),
+    });
+
+    revalidatePath('/groups');
+    return { success: true, message: "Raid atualizada com sucesso!" };
+  } catch (error) {
+    console.error("Erro Supabase Update:", error);
+    return { success: false, message: "Erro ao atualizar raid. Verifique os dados." };
+  }
+}
+
+export async function publishWorkAction(prevState, formData) {
+    const supabase = await createClient();
+
+    // 1. VALIDAR O USUÁRIO E PEGAR O ID DELE
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+
+    const { data: userData, error: userError } = await supabase
+        .from('User')
+        .select('id')
+        .eq('id_login', authUser.id)
+        .single();
+
+    if (userError || !userData) {
+        return { success: false, message: "Perfil não encontrado no banco de dados." };
     }
 
-    // 3. Upload para o Storage
-    const fileExt = arquivo.name.split('.').pop();
-    const fileName = `${userData.id}/${Date.now()}.${fileExt}`;
+    try {
+        const file = formData.get('arquivo');
+        const subject = formData.get('disciplina');
+        const type = formData.get('tema');
+        const graduation = formData.get('graduation');
 
-    const { data: storageData, error: storageError } = await supabase.storage
-      .from('trabalhos_arquivos')
-      .upload(fileName, arquivo);
+        if (!file || file.size === 0) throw new Error("Arquivo é obrigatório");
 
-    if (storageError) throw storageError;
+        // 2. Upload do Arquivo para o Supabase Storage
+        // Nota: O nome foi ajustado para remover espaços, evitando problemas de URL
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const fileName = `${Date.now()}_${safeFileName}`;
+        
+        const { data: storageData, error: storageError } = await supabase.storage
+            .from('works_archives') // O BUCKET DEVE ESTAR PÚBLICO NO SUPABASE
+            .upload(fileName, file);
 
-    // 4. URL Pública
-    const { data: { publicUrl } } = supabase.storage
-      .from('trabalhos_arquivos')
-      .getPublicUrl(fileName);
+        if (storageError) throw storageError;
 
-    // 5. Inserção no Banco (Mapeamento seguindo seu SQL)
-    const { error: dbError } = await supabase
-      .from('Work')
-      .insert([
-        {
-          type: tema,               // Ex: "TCC", "Exercício"
-          subject: disciplina,      // Ex: "Banco de Dados"
-          archive: publicUrl,       // Link do arquivo
-          graduation: graduation    // Ex: "Análise e Desenv. de Sistemas"
+        // Pegar a URL pública do arquivo
+        const { data: { publicUrl } } = supabase.storage
+            .from('works_archives')
+            .getPublicUrl(fileName);
+
+        // 3. Salvar no Banco de Dados usando o Service
+        const workData = {
+            subject: subject,
+            type: type,
+            archive: publicUrl,
+            graduation: graduation || 'Não informada',
+            user_id: userData.id // VINCULA O TRABALHO A QUEM FEZ O UPLOAD
+        };
+
+        await workService.createWork(supabase, workData);
+
+        // Atualiza a lista de trabalhos na UI
+        revalidatePath('/works'); 
+        
+        return { success: true, message: "Trabalho publicado com sucesso!" };
+
+    } catch (error) {
+        console.error('Erro na action publishWorkAction:', error);
+        return { success: false, message: error.message || "Erro ao publicar trabalho." };
+    }
+}
+
+export async function updateWorkAction(prevState, formData) {
+    const supabase = await createClient();
+
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+
+    try {
+        const workId = formData.get('work_id');
+        const file = formData.get('arquivo');
+        const existingArchive = formData.get('existing_archive');
+        
+        let finalArchiveUrl = existingArchive;
+
+        // Se o utilizador enviou um novo ficheiro, fazemos o upload
+        if (file && file.size > 0) {
+            const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+            const fileName = `${Date.now()}_${safeFileName}`;
+            
+            const { error: storageError } = await supabase.storage
+                .from('works_archives') 
+                .upload(fileName, file);
+
+            if (storageError) throw storageError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('works_archives')
+                .getPublicUrl(fileName);
+                
+            finalArchiveUrl = publicUrl;
         }
-      ]);
 
-    if (dbError) throw dbError;
+        const workData = {
+            subject: formData.get('disciplina'),
+            type: formData.get('tema'),
+            graduation: formData.get('graduation'),
+            archive: finalArchiveUrl
+        };
 
-    revalidatePath('/trabalhos');
-    return { success: true, message: "ARTEFATO SINCRONIZADO COM SUCESSO! 🚀" };
+        // Certifique-se de que o workService possui a função updateWork
+        await supabase.from('Work').update(workData).eq('id', workId);
 
-  } catch (error) {
-    console.error("Erro:", error);
-    return { success: false, message: "FALHA NA TRANSMISSÃO: " + error.message };
-  }
+        revalidatePath('/works'); 
+        return { success: true, message: "Trabalho atualizado com sucesso!" };
+
+    } catch (error) {
+        console.error('Erro na action updateWorkAction:', error);
+        return { success: false, message: error.message || "Erro ao atualizar trabalho." };
+    }
+}
+
+// Adicione isto no final do seu src/app/actions.js
+export async function postCommentAction(prevState, formData) {
+    const supabase = await createClient();
+
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+
+    const { data: userData, error: userError } = await supabase
+        .from('User')
+        .select('id')
+        .eq('id_login', authUser.id)
+        .single();
+
+    if (userError || !userData) {
+        return { success: false, message: "Perfil não encontrado." };
+    }
+
+    try {
+        const meetingId = formData.get('meeting_id');
+        // Mantemos o nome do campo do formulário como 'content', mas enviamos para a coluna 'text'
+        const commentText = formData.get('content'); 
+
+        if (!commentText || commentText.trim() === '') {
+            return { success: false, message: "O comentário não pode estar vazio." };
+        }
+
+        // AQUI ESTÁ A CORREÇÃO: Usar a coluna 'text'
+        const { error } = await supabase.from('Comments').insert([{ 
+            meeting_id: meetingId, 
+            user_id: userData.id, 
+            text: commentText 
+        }]);
+
+        if (error) throw error;
+
+        // Opcional: Revalidar o path se estiver a usar cache
+        // revalidatePath(`/groups/${meetingId}`); 
+        return { success: true, message: "Mensagem enviada!" };
+
+    } catch (error) {
+        console.error('Erro ao enviar comentário:', error);
+        return { success: false, message: "Erro ao enviar a mensagem." };
+    }
 }

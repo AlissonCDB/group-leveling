@@ -13,7 +13,7 @@ export default function AuthContainer({ isRegister, setIsRegister }) {
         <p className="text-xs text-purple-300/70 tracking-widest uppercase border-b border-purple-500/20 pb-4">
           {isRegister
             ? 'Junte-se à guilda e comece sua jornada.'
-            : 'Upar sozinho faz você farmar aura, mas upar em grupo faz você farmar experiência.'}
+            : 'Upar sozinho faz você farmar aura, mas upar em grupo faz você farmar conhecimento.'}
         </p>
       </div>
 

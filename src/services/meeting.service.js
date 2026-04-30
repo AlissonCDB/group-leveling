@@ -1,7 +1,4 @@
 export const meetingService = {
-    /**
-     * @param {Object} supabase - Instância (client ou server) passada por quem chama
-     */
     async createRaid(supabase, meetingData) {
         const { data, error } = await supabase
             .from('Meeting')
@@ -13,9 +10,20 @@ export const meetingService = {
         return data;
     },
 
-    async getActiveRaids(supabase) {
-        const now = new Date().toISOString();
+    async updateRaid(supabase, meetingId, meetingData) {
+        const { data, error } = await supabase
+            .from('Meeting')
+            .update(meetingData)
+            .eq('id', meetingId)
+            .select()
+            .single();
 
+        if (error) throw error;
+        return data;
+    },
+
+    // RENOMEADO E ATUALIZADO: Agora traz o histórico completo
+    async getAllRaids(supabase) {
         const { data, error } = await supabase
             .from('Meeting')
             .select(`
@@ -24,10 +32,13 @@ export const meetingService = {
                   user_name,
                   last_name,
                   Class ( name_class )
-                )
-            `)
-            .gte('meeting_date', now)
-            .order('meeting_date', { ascending: true });
+                ),
+                plataform_meeting ( option ),
+                theme ( option ),
+                meeting_tamplate ( option ),
+                group_category ( option )
+            `); 
+            // Removemos o .gte() e o .order() daqui para o Frontend controlar a ordenação
 
         if (error) throw error;
         return data;
