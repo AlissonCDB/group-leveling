@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { meetingService } from '@/services/meeting.service'
+import { workService } from '@/services/work.service'
 
 export async function authenticate(previousState, formData) {
   const email = formData.get('email');
@@ -204,14 +205,14 @@ export async function publishWorkAction(prevState, formData) {
         const fileName = `${Date.now()}_${safeFileName}`;
         
         const { data: storageData, error: storageError } = await supabase.storage
-            .from('works_archives') // O BUCKET DEVE ESTAR PÚBLICO NO SUPABASE
+            .from('trabalhos_arquivos') // O BUCKET DEVE ESTAR PÚBLICO NO SUPABASE
             .upload(fileName, file);
 
         if (storageError) throw storageError;
 
         // Pegar a URL pública do arquivo
         const { data: { publicUrl } } = supabase.storage
-            .from('works_archives')
+            .from('trabalhos_arquivos')
             .getPublicUrl(fileName);
 
         // 3. Salvar no Banco de Dados usando o Service
@@ -255,13 +256,13 @@ export async function updateWorkAction(prevState, formData) {
             const fileName = `${Date.now()}_${safeFileName}`;
             
             const { error: storageError } = await supabase.storage
-                .from('works_archives') 
+                .from('trabalhos_arquivos') 
                 .upload(fileName, file);
 
             if (storageError) throw storageError;
 
             const { data: { publicUrl } } = supabase.storage
-                .from('works_archives')
+                .from('trabalhos_arquivos')
                 .getPublicUrl(fileName);
                 
             finalArchiveUrl = publicUrl;
