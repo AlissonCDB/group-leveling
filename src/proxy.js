@@ -54,6 +54,8 @@ export default async function proxy(req) {
 export const config = {
   matcher: [
     "/home/:path*",
-    "/groups/:path*"
+    "/groups/:path*",
+    "/works/:path*",
+    "/ranks/:path*"
   ],
 };
