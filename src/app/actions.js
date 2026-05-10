@@ -123,8 +123,8 @@ export async function createMeetingAction(previousState, formData) {
     const themeId = formData.get('theme');
     const parsedTheme = themeId ? parseInt(themeId) : null;
 
-    // 3. Mapear dados do formulário para as colunas do SQL
-    await meetingService.createRaid(supabase, {
+    // 3. Montar o objeto meetingData
+    const meetingData = {
       creator: userData.id,
       meeting_date: formData.get('meeting_date'),
       plataform_meeting: parseInt(formData.get('plataform_meeting')),
@@ -134,7 +134,12 @@ export async function createMeetingAction(previousState, formData) {
       theme: parsedTheme,
       content: formData.get('conteudo'),
       duration: formData.get('tempo_estimado'),
-    });
+      user_limit: parseInt(formData.get('user_limit'))
+    };
+
+    // 4. Mapear dados do formulário para as colunas do SQL
+    // 👇 AQUI ESTÁ A CORREÇÃO: Passando o userData.id como 3º parâmetro
+    await meetingService.createRaid(supabase, meetingData, userData.id);
 
     revalidatePath('/groups');
     return { success: true, message: "Raid registada na base de missões!" };
