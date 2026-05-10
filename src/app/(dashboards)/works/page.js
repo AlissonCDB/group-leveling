@@ -60,6 +60,54 @@ export default function WorksPage() {
         setIsEditModalOpen(true);
     };
 
+    // 🔴 NOVA FUNÇÃO: Lógica para registrar o acesso ao trabalho
+    const handleDownloadWork = async (work) => {
+    // 1. Abre o arquivo imediatamente para não travar a experiência do usuário
+    if (work.archive) {
+        window.open(work.archive, '_blank');
+    }
+
+    // Se for o dono do trabalho ou não estiver logado, ignora o registro
+    if (!currentUserId || work.user_id === currentUserId) return;
+
+    const supabase = createClient();
+
+    try {
+        // 2. VERIFICAÇÃO: Tenta buscar um registro que já tenha esse usuário e esse trabalho
+        const { data: existingRecord, error: searchError } = await supabase
+            .from('User_Work')
+            .select('id')
+            .eq('id_user', currentUserId)
+            .eq('id_work', work.id)
+            .maybeSingle(); // Retorna nulo se não encontrar, em vez de dar erro
+
+        if (searchError) throw searchError;
+
+        // 3. REGISTRO: Só insere se o registro NÃO existir
+        if (!existingRecord) {
+            const { error: insertError } = await supabase
+                .from('User_Work')
+                .insert([
+                    { 
+                        id_user: currentUserId, 
+                        id_work: work.id 
+                    }
+                ]);
+
+            if (insertError) {
+                // Se a Policy de RLS ou a Unique Constraint barrear, cai aqui
+                console.warn("Registro duplicado ou bloqueado pelo banco.");
+            } else {
+                console.log("Novo trabalho adicionado à sua biblioteca!");
+            }
+        } else {
+            console.log("Este trabalho já consta na sua biblioteca.");
+        }
+    } catch (err) {
+        console.error("Erro interno ao processar download:", err.message);
+    }
+};
+
     // Aplicação dos Filtros
     const filteredWorks = works.filter((work) => {
         let matchesType = true;
@@ -105,6 +153,7 @@ export default function WorksPage() {
                                 work={work} 
                                 currentUserId={currentUserId} 
                                 onEdit={openEditModal} 
+                                onDownload={() => handleDownloadWork(work)} /* 🔴 ENVIANDO A FUNÇÃO PARA O CARTÃO */
                             />
                         ))}
                     </div>
