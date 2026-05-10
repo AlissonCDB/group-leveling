@@ -6,6 +6,9 @@ import { Swords, Briefcase, Trophy, Power } from 'lucide-react';
 import Image from 'next/image';
 import MenuCard from '@/components/View/HomeCard';
 
+// Certifique-se que o caminho do import está correto (UI ou View)
+import PendingRatingsAlert from '@/components/View/PendingRatingsAlert';
+
 const MENU_OPTIONS = [
   {
     name: 'Radar de Raids',
@@ -36,6 +39,7 @@ export default function Home() {
 
   return (
     <div className="flex w-screen h-screen">
+      
       {/* Background Section */}
       <div className="fixed inset-0 z-0">
         <Image
@@ -74,26 +78,31 @@ export default function Home() {
 
         {/* TELA 2: MENU DE SELEÇÃO */}
         {currentStep === 'menu' && (
-          <div className="flex w-full max-w-5xl h-full flex-col items-center justify-start md:justify-center pt-12 pb-12 md:py-0 overflow-y-auto scrollbar-hide animate-in slide-in-from-bottom-10 fade-in duration-500">
-            <div className="text-center md:text-left w-full mb-12 shrink-0">
-              <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Acesso Autorizado</p>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tight">Painel Principal</h2>
-            </div>
+          <>
+            {/* 🔴 O ALERTA AGORA SÓ É CARREGADO NESTA SEQUÊNCIA */}
+            <PendingRatingsAlert />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full shrink-0">
-              {MENU_OPTIONS.map((option) => (
-                <MenuCard
-                  key={option.name}
-                  {...option}
-                  onClick={() => router.push(option.path)}
-                />
-              ))}
-            </div>
+            <div className="flex w-full max-w-5xl h-full flex-col items-center justify-start md:justify-center pt-12 pb-12 md:py-0 overflow-y-auto scrollbar-hide animate-in slide-in-from-bottom-10 fade-in duration-500">
+              <div className="text-center md:text-left w-full mb-12 shrink-0">
+                <p className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Acesso Autorizado</p>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tight">Painel Principal</h2>
+              </div>
 
-            <p className="mt-12 text-gray-600 text-[10px] uppercase tracking-[0.5em] shrink-0">
-              Escolha o seu próximo destino
-            </p>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full shrink-0">
+                {MENU_OPTIONS.map((option) => (
+                  <MenuCard
+                    key={option.name}
+                    {...option}
+                    onClick={() => router.push(option.path)}
+                  />
+                ))}
+              </div>
+
+              <p className="mt-12 text-gray-600 text-[10px] uppercase tracking-[0.5em] shrink-0">
+                Escolha o seu próximo destino
+              </p>
+            </div>
+          </>
         )}
       </div>
     </div>
