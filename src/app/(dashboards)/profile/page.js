@@ -2,24 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { User, Shield, MapPin, Briefcase, Users, Trash2, Edit3, Loader2, Target } from 'lucide-react';
+import { User, Shield, MapPin, Briefcase, Users, Trash2, Edit3, Loader2, Target, Star, X, MessageSquareText } from 'lucide-react';
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState(null);
     const [userWorks, setUserWorks] = useState([]);
     const [userRaids, setUserRaids] = useState([]);
-    const [userParticipatedRaids, setUserParticipatedRaids] = useState([]); // 🔴 NOVO ESTADO
+    const [userParticipatedRaids, setUserParticipatedRaids] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [ratingModal, setRatingModal] = useState(null); 
+    const [hoveredStar, setHoveredStar] = useState(0); 
+    const [selectedStar, setSelectedStar] = useState(0);
+    const [ratingComment, setRatingComment] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         async function loadProfileData() {
             const supabase = createClient();
             try {
-                // 1. Obter o utilizador autenticado
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (!authUser) return;
 
-                // 2. Buscar o Perfil e a Classe do Utilizador
                 const { data: profileData } = await supabase
                     .from('User')
                     .select('*, Class ( name_class, reference_class, description_class )')
@@ -29,7 +33,6 @@ export default function ProfilePage() {
                 if (profileData) {
                     setProfile(profileData);
 
-                    // 3. Buscar os Trabalhos publicados pelo Utilizador
                     const { data: works } = await supabase
                         .from('Work')
                         .select('*')
@@ -37,7 +40,6 @@ export default function ProfilePage() {
                         .order('id', { ascending: false });
                     setUserWorks(works || []);
 
-                    // 4. Buscar as Raids LIDERADAS pelo Utilizador
                     const { data: raids } = await supabase
                         .from('Meeting')
                         .select('*, group_category(option), plataform_meeting(option), meeting_tamplate(option), theme(option)')
@@ -45,26 +47,32 @@ export default function ProfilePage() {
                         .order('meeting_date', { ascending: false });
                     setUserRaids(raids || []);
 
-                    // 5. 🔴 Buscar as Raids PARTICIPADAS pelo Utilizador (via tabela User_Meeting)
                     const { data: participatedData } = await supabase
                         .from('User_Meeting')
                         .select(`
+                            id,
+                            rating,
+                            comment,
                             Meeting (
                                 *,
                                 group_category(option),
                                 plataform_meeting(option),
                                 meeting_tamplate(option),
-                                theme(option)
+                                theme(option),
+                                User (user_name, last_name)
                             )
                         `)
                         .eq('id_user', profileData.id);
 
-                    // O Supabase retorna um array de objetos { Meeting: { dados... } }. 
-                    // Vamos extrair apenas os dados da Meeting e organizar por data.
                     if (participatedData) {
                         const joinedRaids = participatedData
-                            .map(item => item.Meeting)
-                            .filter(Boolean) // Remove nulos caso a raid tenha sido deletada
+                            .filter(item => item.Meeting && item.Meeting.creator !== profileData.id)
+                            .map(item => ({
+                                ...item.Meeting,
+                                user_meeting_id: item.id, 
+                                user_rating: item.rating,
+                                user_comment: item.comment
+                            }))
                             .sort((a, b) => new Date(b.meeting_date) - new Date(a.meeting_date));
                         
                         setUserParticipatedRaids(joinedRaids);
@@ -80,16 +88,68 @@ export default function ProfilePage() {
         loadProfileData();
     }, []);
 
-    return (
-        <div className="flex flex-col md:flex-row w-screen h-screen overflow-hidden font-sans">
+    // 🔴 LÓGICA DE SALVAR ATUALIZADA PARA DETETAR BLOQUEIOS DO BANCO
+    const submitRating = async () => {
+        if (!ratingModal) return;
+        if (selectedStar === 0) {
+            alert("Por favor, selecione uma nota de 1 a 5 estrelas antes de avaliar.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        const supabase = createClient();
+
+        try {
+            const { data, error } = await supabase
+                .from('User_Meeting')
+                // Se não houver comentário, enviamos nulo em vez de texto vazio
+                .update({ rating: selectedStar, comment: ratingComment || null }) 
+                .eq('id', ratingModal.user_meeting_id)
+                .select(); // 🔴 OBRIGA O SUPABASE A RESPONDER SE CONSEGUIU EDITAR
+
+            if (error) throw error;
+
+            // Se o Supabase devolver um array vazio, significa que o RLS bloqueou a edição!
+            if (!data || data.length === 0) {
+                alert("Acesso Negado pelo Supabase! Você precisa liberar a permissão de UPDATE na tabela User_Meeting.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Se chegou aqui, salvou com sucesso! Atualiza a tela:
+            setUserParticipatedRaids(prev => 
+                prev.map(raid => 
+                    raid.user_meeting_id === ratingModal.user_meeting_id 
+                        ? { ...raid, user_rating: selectedStar, user_comment: ratingComment } 
+                        : raid
+                )
+            );
             
-            {/* PAINEL ESQUERDO: Identidade (Cinza/Prata Metálico) */}
+            setRatingModal(null); 
+            setSelectedStar(0);
+            setRatingComment('');
+        } catch (err) {
+            console.error("Erro ao salvar avaliação:", err);
+            alert("Não foi possível salvar a sua avaliação.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const openRatingModal = (raid) => {
+        setRatingModal(raid);
+        setSelectedStar(0);
+        setRatingComment('');
+    };
+
+    return (
+        <div className="flex flex-col md:flex-row w-screen h-screen overflow-hidden font-sans relative">
+            
             <div className="relative w-full md:w-1/3 h-2/5 md:h-full bg-slate-800 flex flex-col justify-center items-center p-8 text-white transition-all shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-10 overflow-hidden">
                 <div className="absolute inset-0 bg-black/40" />
                 <div className="absolute inset-0 bg-[url('/assets/background.png')] bg-cover bg-center opacity-10 mix-blend-overlay" />
                 
                 <div className="relative z-10 flex flex-col items-center text-center w-full">
-                    
                     {loading ? (
                         <div className="flex flex-col items-center animate-pulse">
                             <Loader2 size={48} className="text-slate-400 animate-spin mb-4" />
@@ -97,12 +157,10 @@ export default function ProfilePage() {
                         </div>
                     ) : (
                         <>
-                            {/* Avatar */}
                             <div className="hidden md:flex w-24 h-24 bg-slate-900/50 rounded-full border-2 border-slate-400 items-center justify-center mb-6 shadow-[0_0_30px_rgba(148,163,184,0.3)]">
                                 <User size={48} className="text-slate-300" />
                             </div>
                             
-                            {/* Nome e Classe */}
                             <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-lg">
                                 {profile?.user_name} {profile?.last_name}
                             </h1>
@@ -112,12 +170,10 @@ export default function ProfilePage() {
                                 <span>{profile?.Class?.name_class || 'Caçador'}</span>
                             </div>
                             
-                            {/* Lore da Classe */}
                             <p className="text-sm text-slate-300 text-center max-w-xs font-medium leading-relaxed mb-8 italic border-l-2 border-slate-500/50 pl-3">
                                 "{profile?.Class?.description_class || 'A sua jornada na guilda começou.'}"
                             </p>
 
-                            {/* Afinidade */}
                             <div className="flex flex-col items-center mb-8 w-full">
                                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1 flex items-center gap-1">
                                     <MapPin size={10} /> Afinidade Tech
@@ -133,10 +189,8 @@ export default function ProfilePage() {
                 </div>
             </div>
 
-            {/* PAINEL DIREITO: Histórico e Arquivos */}
             <div className="w-full md:w-2/3 h-3/5 md:h-full bg-gray-950 flex flex-col p-6 md:p-12 overflow-y-auto scrollbar-hide">
                 
-                {/* Cabeçalho */}
                 <div className="mb-8 border-b border-slate-500/20 pb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-3xl font-black text-white uppercase tracking-tight">O Seu Histórico</h2>
@@ -151,7 +205,6 @@ export default function ProfilePage() {
                 ) : (
                     <div className="flex flex-col gap-8 flex-1">
                         
-                        {/* 1. SEÇÃO DE TRABALHOS */}
                         <section>
                             <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
                                 <Briefcase size={20} className="text-blue-500" /> Trabalhos Publicados
@@ -173,7 +226,6 @@ export default function ProfilePage() {
                             )}
                         </section>
 
-                        {/* 2. SEÇÃO DE RAIDS LIDERADAS */}
                         <section>
                             <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
                                 <Users size={20} className="text-purple-500" /> Raids Lideradas
@@ -189,7 +241,9 @@ export default function ProfilePage() {
                                         <div key={raid.id} className="flex flex-col p-5 bg-gray-900 border border-purple-500/30 rounded-xl hover:border-purple-400 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all group">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest">{raid.group_category?.option}</span>
-                                                <span className="text-[9px] font-bold text-gray-500 uppercase">{new Date(raid.meeting_date).toLocaleDateString('pt-BR')}</span>
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase">
+                                                    {new Date(raid.meeting_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                                </span>
                                             </div>
                                             <h4 className="text-white font-bold truncate group-hover:text-purple-300 transition-colors">{raid.theme?.option || 'Sem Tema'}</h4>
                                         </div>
@@ -198,7 +252,6 @@ export default function ProfilePage() {
                             )}
                         </section>
 
-                        {/* 3. 🔴 NOVA SEÇÃO DE RAIDS PARTICIPADAS */}
                         <section>
                             <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
                                 <Target size={20} className="text-emerald-500" /> Raids Participadas
@@ -210,15 +263,47 @@ export default function ProfilePage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {userParticipatedRaids.map(raid => (
-                                        <div key={raid.id} className="flex flex-col p-5 bg-gray-900 border border-emerald-500/30 rounded-xl hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all group">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">{raid.group_category?.option}</span>
-                                                <span className="text-[9px] font-bold text-gray-500 uppercase">{new Date(raid.meeting_date).toLocaleDateString('pt-BR')}</span>
+                                    {userParticipatedRaids.map(raid => {
+                                        const now = new Date();
+                                        const utcDate = new Date(raid.meeting_date);
+                                        const raidDate = new Date(
+                                            utcDate.getUTCFullYear(),
+                                            utcDate.getUTCMonth(),
+                                            utcDate.getUTCDate(),
+                                            utcDate.getUTCHours(),
+                                            utcDate.getUTCMinutes()
+                                        );
+                                        const hasPassed = raidDate < now; 
+
+                                        return (
+                                            <div key={raid.user_meeting_id} className="flex flex-col p-5 bg-gray-900 border border-emerald-500/30 rounded-xl hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all group relative">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">{raid.group_category?.option}</span>
+                                                    <span className="text-[9px] font-bold text-gray-500 uppercase">{utcDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
+                                                </div>
+                                                <h4 className="text-white font-bold truncate group-hover:text-emerald-300 transition-colors mb-4">{raid.theme?.option || 'Sem Tema'}</h4>
+                                                
+                                                <div className="mt-auto pt-3 border-t border-gray-800 flex items-center justify-between">
+                                                    {!hasPassed ? (
+                                                        <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-500/70 bg-emerald-500/10 px-2 py-1 rounded">Em Breve</span>
+                                                    ) : raid.user_rating ? (
+                                                        <div className="flex items-center gap-1 text-yellow-500" title={raid.user_comment}>
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star key={i} size={14} fill={i < raid.user_rating ? "currentColor" : "none"} className={i < raid.user_rating ? "text-yellow-500" : "text-gray-600"} />
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => openRatingModal(raid)}
+                                                            className="text-[10px] uppercase font-bold tracking-widest text-white bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded transition-colors"
+                                                        >
+                                                            Avaliar Raid
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <h4 className="text-white font-bold truncate group-hover:text-emerald-300 transition-colors">{raid.theme?.option || 'Sem Tema'}</h4>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </section>
@@ -226,13 +311,102 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {/* Footer de Perigo */}
                 <div className="mt-8 pt-6 border-t border-gray-800 flex justify-center pb-20 md:pb-0">
                     <button className="flex items-center gap-2 text-[10px] font-bold text-gray-600 hover:text-red-500 uppercase tracking-widest transition-colors bg-gray-900/50 px-4 py-2 rounded-lg hover:bg-red-950/30 hover:border-red-500/30 border border-transparent">
                         <Trash2 size={14} /> Encerrar Jornada e Deletar Conta
                     </button>
                 </div>
             </div>
+
+            {ratingModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-gray-950 border border-emerald-500/30 rounded-2xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(16,185,129,0.15)] overflow-hidden">
+                        <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-gray-900/50">
+                            <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                <Target size={16} className="text-emerald-500" /> Avaliar Missão
+                            </h2>
+                            <button 
+                                onClick={() => setRatingModal(null)}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 flex flex-col items-center">
+                            
+                            <div className="w-full text-center mb-6 pb-6 border-b border-gray-800">
+                                <h3 className="text-xl font-bold text-white mb-2">{ratingModal.theme?.option || 'Raid sem tema'}</h3>
+                                <p className="text-xs text-gray-400 uppercase tracking-widest font-bold">
+                                    Organizada por: <span className="text-emerald-400">{ratingModal.User?.user_name || 'Desconhecido'} {ratingModal.User?.last_name || ''}</span>
+                                </p>
+                            </div>
+                            
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3">Qual a sua nota?</p>
+                            <div className="flex gap-2 mb-2">
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                    const isFilled = (hoveredStar || selectedStar) >= star;
+                                    
+                                    return (
+                                        <button
+                                            key={star}
+                                            onMouseEnter={() => setHoveredStar(star)}
+                                            onMouseLeave={() => setHoveredStar(0)}
+                                            onClick={() => setSelectedStar(star)}
+                                            disabled={isSubmitting}
+                                            className="transform hover:scale-110 transition-transform disabled:opacity-50"
+                                        >
+                                            <Star 
+                                                size={32} 
+                                                fill={isFilled ? "#eab308" : "none"} 
+                                                className={isFilled ? "text-yellow-500" : "text-gray-600"} 
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest text-center h-4 mb-6">
+                                {hoveredStar === 1 || (selectedStar === 1 && hoveredStar === 0) ? "Precisa melhorar muito" : 
+                                 hoveredStar === 2 || (selectedStar === 2 && hoveredStar === 0) ? "Abaixo das expectativas" :
+                                 hoveredStar === 3 || (selectedStar === 3 && hoveredStar === 0) ? "Missão Padrão" :
+                                 hoveredStar === 4 || (selectedStar === 4 && hoveredStar === 0) ? "Ótima Execução" :
+                                 hoveredStar === 5 || (selectedStar === 5 && hoveredStar === 0) ? "Raid Perfeita!" : "Selecione uma nota"}
+                            </p>
+
+                            <div className="w-full mb-6">
+                                <label className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">
+                                    <MessageSquareText size={14} /> Comentários da Raid (Opcional)
+                                </label>
+                                <textarea
+                                    value={ratingComment}
+                                    onChange={(e) => setRatingComment(e.target.value)}
+                                    placeholder="Deixe um feedback sobre como foi a missão, o que achou da organização..."
+                                    className="w-full h-24 bg-gray-900 border border-gray-700 text-white rounded-xl p-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 focus:outline-none resize-none transition-all placeholder:text-gray-600"
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
+                            <button
+                                onClick={submitRating}
+                                disabled={isSubmitting || selectedStar === 0}
+                                className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                    selectedStar > 0 
+                                    ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]" 
+                                    : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                                }`}
+                            >
+                                {isSubmitting ? (
+                                    <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> Salvando...</span>
+                                ) : (
+                                    "Salvar Avaliação"
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

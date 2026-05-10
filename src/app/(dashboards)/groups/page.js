@@ -113,15 +113,29 @@ export default function GroupsPage() {
             if (templateFilter !== 'all') matchesTemplate = raid.meeting_tamplate?.option === templateFilter;
             if (categoryFilter !== 'all') matchesCategory = raid.group_category?.option === categoryFilter;
 
-            const raidDate = new Date(raid.meeting_date);
+            // 🔴 CORREÇÃO DO FUSO HORÁRIO NO FILTRO
+            const utcDate = new Date(raid.meeting_date);
+            const raidDate = new Date(
+                utcDate.getUTCFullYear(),
+                utcDate.getUTCMonth(),
+                utcDate.getUTCDate(),
+                utcDate.getUTCHours(),
+                utcDate.getUTCMinutes()
+            );
+
             if (timeFilter === 'upcoming') matchesTime = raidDate >= now;
             if (timeFilter === 'past') matchesTime = raidDate < now;
 
             return matchesTemplate && matchesCategory && matchesTime;
         })
         .sort((a, b) => {
-            const dateA = new Date(a.meeting_date).getTime();
-            const dateB = new Date(b.meeting_date).getTime();
+            // 🔴 CORREÇÃO DO FUSO HORÁRIO NA ORDENAÇÃO
+            const utcDateA = new Date(a.meeting_date);
+            const dateA = new Date(utcDateA.getUTCFullYear(), utcDateA.getUTCMonth(), utcDateA.getUTCDate(), utcDateA.getUTCHours(), utcDateA.getUTCMinutes()).getTime();
+            
+            const utcDateB = new Date(b.meeting_date);
+            const dateB = new Date(utcDateB.getUTCFullYear(), utcDateB.getUTCMonth(), utcDateB.getUTCDate(), utcDateB.getUTCHours(), utcDateB.getUTCMinutes()).getTime();
+            
             return timeFilter === 'past' ? dateB - dateA : dateA - dateB;
         });
 
@@ -160,7 +174,6 @@ export default function GroupsPage() {
                                 raid={raid}
                                 currentUserId={currentUserId}
                                 onEdit={openEditModal}
-                                // CORREÇÃO: Passando o objeto 'raid' completo
                                 onEnter={() => handleEnterRaid(raid)} 
                             />
                         ))}

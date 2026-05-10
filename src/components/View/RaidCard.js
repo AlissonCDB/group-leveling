@@ -108,11 +108,21 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter }) {
     const now = new Date();
     const isCreator = currentUserId === raid.creator;
     const isMember = raid.User_Meeting?.some(m => m.id_user === currentUserId) || isCreator;
-    const isPast = new Date(raid.meeting_date) < now;
+    
+    // 🔴 CORREÇÃO DO FUSO HORÁRIO PARA O STATUS DO CARTÃO:
+    const utcDate = new Date(raid.meeting_date);
+    const raidDate = new Date(
+        utcDate.getUTCFullYear(),
+        utcDate.getUTCMonth(),
+        utcDate.getUTCDate(),
+        utcDate.getUTCHours(),
+        utcDate.getUTCMinutes()
+    );
+    const isPast = raidDate < now;
 
     // --- LÓGICA DE PARTICIPANTES ATUALIZADA ---
-const maxPlayers = raid.user_limit || 0;
-const currentPlayers = raid.current_participants || 0;
+    const maxPlayers = raid.user_limit || 0;
+    const currentPlayers = raid.current_participants || 0;
 
     // Bloqueia se: View marcou como full OU limite atingido OU limite é zero (0/0)
     const isFull = raid.is_full || (currentPlayers >= maxPlayers && maxPlayers > 0) || (maxPlayers === 0);
@@ -186,7 +196,8 @@ const currentPlayers = raid.current_participants || 0;
                                 {new Date(raid.meeting_date).toLocaleDateString('pt-BR', {
                                     weekday: 'short',
                                     day: '2-digit',
-                                    month: 'long'
+                                    month: 'long',
+                                    timeZone: 'UTC' // <-- MANTIDO
                                 })}
                             </span>
                         </LogisticContent>
@@ -201,7 +212,11 @@ const currentPlayers = raid.current_participants || 0;
                             <span className="label">Início e Duração</span>
                             <div className="flex items-baseline">
                                 <span className="value">
-                                    {new Date(raid.meeting_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(raid.meeting_date).toLocaleTimeString('pt-BR', { 
+                                        timeZone: 'UTC', // <-- MANTIDO
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    })}
                                 </span>
                                 <span className="sub-value">
                                     • {raid.duration || '--'} min
