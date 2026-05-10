@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { User, Shield, MapPin, Briefcase, Users, Trash2, Edit3, Loader2 } from 'lucide-react';
+import { User, Shield, MapPin, Briefcase, Users, Trash2, Edit3, Loader2, Target } from 'lucide-react';
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState(null);
     const [userWorks, setUserWorks] = useState([]);
     const [userRaids, setUserRaids] = useState([]);
+    const [userParticipatedRaids, setUserParticipatedRaids] = useState([]); // 🔴 NOVO ESTADO
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -36,13 +37,38 @@ export default function ProfilePage() {
                         .order('id', { ascending: false });
                     setUserWorks(works || []);
 
-                    // 4. Buscar as Raids criadas pelo Utilizador
+                    // 4. Buscar as Raids LIDERADAS pelo Utilizador
                     const { data: raids } = await supabase
                         .from('Meeting')
                         .select('*, group_category(option), plataform_meeting(option), meeting_tamplate(option), theme(option)')
                         .eq('creator', profileData.id)
                         .order('meeting_date', { ascending: false });
                     setUserRaids(raids || []);
+
+                    // 5. 🔴 Buscar as Raids PARTICIPADAS pelo Utilizador (via tabela User_Meeting)
+                    const { data: participatedData } = await supabase
+                        .from('User_Meeting')
+                        .select(`
+                            Meeting (
+                                *,
+                                group_category(option),
+                                plataform_meeting(option),
+                                meeting_tamplate(option),
+                                theme(option)
+                            )
+                        `)
+                        .eq('id_user', profileData.id);
+
+                    // O Supabase retorna um array de objetos { Meeting: { dados... } }. 
+                    // Vamos extrair apenas os dados da Meeting e organizar por data.
+                    if (participatedData) {
+                        const joinedRaids = participatedData
+                            .map(item => item.Meeting)
+                            .filter(Boolean) // Remove nulos caso a raid tenha sido deletada
+                            .sort((a, b) => new Date(b.meeting_date) - new Date(a.meeting_date));
+                        
+                        setUserParticipatedRaids(joinedRaids);
+                    }
                 }
             } catch (err) {
                 console.error("Erro ao carregar perfil:", err);
@@ -125,7 +151,7 @@ export default function ProfilePage() {
                 ) : (
                     <div className="flex flex-col gap-8 flex-1">
                         
-                        {/* Seção de Trabalhos - Mantém as cores Azuis do módulo de Works para associação visual */}
+                        {/* 1. SEÇÃO DE TRABALHOS */}
                         <section>
                             <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
                                 <Briefcase size={20} className="text-blue-500" /> Trabalhos Publicados
@@ -147,7 +173,7 @@ export default function ProfilePage() {
                             )}
                         </section>
 
-                        {/* Seção de Raids Lideradas - Mantém as cores Roxas do módulo de Raids */}
+                        {/* 2. SEÇÃO DE RAIDS LIDERADAS */}
                         <section>
                             <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
                                 <Users size={20} className="text-purple-500" /> Raids Lideradas
@@ -166,6 +192,31 @@ export default function ProfilePage() {
                                                 <span className="text-[9px] font-bold text-gray-500 uppercase">{new Date(raid.meeting_date).toLocaleDateString('pt-BR')}</span>
                                             </div>
                                             <h4 className="text-white font-bold truncate group-hover:text-purple-300 transition-colors">{raid.theme?.option || 'Sem Tema'}</h4>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        {/* 3. 🔴 NOVA SEÇÃO DE RAIDS PARTICIPADAS */}
+                        <section>
+                            <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4">
+                                <Target size={20} className="text-emerald-500" /> Raids Participadas
+                            </h3>
+                            
+                            {userParticipatedRaids.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-emerald-500/20 rounded-2xl bg-gray-900/50">
+                                    <p className="text-gray-500 italic text-sm">Ainda não participou em nenhuma raid.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {userParticipatedRaids.map(raid => (
+                                        <div key={raid.id} className="flex flex-col p-5 bg-gray-900 border border-emerald-500/30 rounded-xl hover:border-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all group">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">{raid.group_category?.option}</span>
+                                                <span className="text-[9px] font-bold text-gray-500 uppercase">{new Date(raid.meeting_date).toLocaleDateString('pt-BR')}</span>
+                                            </div>
+                                            <h4 className="text-white font-bold truncate group-hover:text-emerald-300 transition-colors">{raid.theme?.option || 'Sem Tema'}</h4>
                                         </div>
                                     ))}
                                 </div>

@@ -14,7 +14,6 @@ export default function RankingPage() {
     const [currentUserId, setCurrentUserId] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Estado para controlar qual modal de ranking completo está aberto: 'works' | 'meetings' | null
     const [activeModal, setActiveModal] = useState(null); 
     const [periodFilter, setPeriodFilter] = useState('all'); 
 
@@ -25,19 +24,26 @@ export default function RankingPage() {
 
             try {
                 const { data: { user: authUser } } = await supabase.auth.getUser();
+                
+                if (!authUser) {
+                    router.replace('/'); 
+                    return; 
+                }
+
                 if (authUser) {
                     const { data: userData } = await supabase.from('User').select('id').eq('id_login', authUser.id).single();
                     if (userData) setCurrentUserId(userData.id);
                 }
 
+                // 🔴 AQUI ESTÁ O SEGREDO: Agora pedimos o 'created_at' do Work e do Meeting
                 const { data: usersData, error } = await supabase
                     .from('User') 
                     .select(`
                         id, 
                         user_name, 
                         last_name,
-                        Work ( id ),
-                        Meeting ( id )
+                        Work ( id, created_at ),
+                        Meeting ( id, created_at )
                     `); 
 
                 if (error) throw error;
@@ -51,12 +57,25 @@ export default function RankingPage() {
         }
         
         loadRankingData();
-    }, [periodFilter]); 
+    }, [router]); 
 
-    // 1. Processa o Ranking de TRABALHOS (AGORA SEM CORTE DE QUANTIDADE)
+    // 1. Processa o Ranking de TRABALHOS (COM FILTRO)
     const worksRanking = useMemo(() => {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
         return allUsersData.map(user => {
-            const score = user.Work ? user.Work.length : 0;
+            let validWorks = user.Work ? user.Work : [];
+
+            // O JavaScript corta os trabalhos que são mais velhos que o filtro escolhido
+            if (periodFilter === 'week') {
+                validWorks = validWorks.filter(w => new Date(w.created_at) >= sevenDaysAgo);
+            } else if (periodFilter === 'month') {
+                validWorks = validWorks.filter(w => new Date(w.created_at) >= thirtyDaysAgo);
+            }
+
+            const score = validWorks.length;
             const level = Math.floor(score / 2) + 1;
             return {
                 id: user.id,
@@ -66,13 +85,25 @@ export default function RankingPage() {
             };
         })
         .filter(user => user.score > 0)
-        .sort((a, b) => b.score - a.score); // Sem o .slice(), mantemos a lista inteira
-    }, [allUsersData]);
+        .sort((a, b) => b.score - a.score); 
+    }, [allUsersData, periodFilter]); 
 
-    // 2. Processa o Ranking de AGENDAMENTOS (AGORA SEM CORTE DE QUANTIDADE)
+    // 2. Processa o Ranking de AGENDAMENTOS (COM FILTRO)
     const meetingsRanking = useMemo(() => {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
         return allUsersData.map(user => {
-            const score = user.Meeting ? user.Meeting.length : 0;
+            let validMeetings = user.Meeting ? user.Meeting : [];
+
+            if (periodFilter === 'week') {
+                validMeetings = validMeetings.filter(m => new Date(m.created_at) >= sevenDaysAgo);
+            } else if (periodFilter === 'month') {
+                validMeetings = validMeetings.filter(m => new Date(m.created_at) >= thirtyDaysAgo);
+            }
+
+            const score = validMeetings.length;
             const level = Math.floor(score / 2) + 1;
             return {
                 id: user.id,
@@ -83,11 +114,10 @@ export default function RankingPage() {
         })
         .filter(user => user.score > 0)
         .sort((a, b) => b.score - a.score);
-    }, [allUsersData]);
+    }, [allUsersData, periodFilter]); 
 
     const handleViewProfile = (userId) => {
         router.push(`/profile/${userId}`);
-        // Opcional: fechar o modal ao navegar para o perfil
         setActiveModal(null);
     };
 
@@ -100,7 +130,6 @@ export default function RankingPage() {
         }
     };
 
-    // Função de renderização da lista (usada tanto na tela principal quanto no modal)
     const renderRankingList = (rankingData, emptyMessage, labelScore) => {
         if (rankingData.length === 0) {
             return (
@@ -203,7 +232,6 @@ export default function RankingPage() {
                 ) : (
                     <div className="flex flex-col gap-12 pb-12">
                         
-                        {/* SEÇÃO 1: TRABALHOS (Exibe apenas Top 3) */}
                         <section>
                             <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
                                 <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
@@ -215,10 +243,8 @@ export default function RankingPage() {
                                 </div>
                             </div>
                             
-                            {/* Pega apenas do índice 0 até o 3 para a tela principal */}
                             {renderRankingList(worksRanking.slice(0, 3), "Nenhum jogador publicou trabalhos.", "Pubs")}
 
-                            {/* Botão para abrir o Modal de Trabalhos */}
                             {worksRanking.length > 3 && (
                                 <button 
                                     onClick={() => setActiveModal('works')}
@@ -229,7 +255,6 @@ export default function RankingPage() {
                             )}
                         </section>
 
-                        {/* SEÇÃO 2: AGENDAMENTOS (Exibe apenas Top 3) */}
                         <section>
                             <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
                                 <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
@@ -241,10 +266,8 @@ export default function RankingPage() {
                                 </div>
                             </div>
                             
-                            {/* Pega apenas do índice 0 até o 3 para a tela principal */}
                             {renderRankingList(meetingsRanking.slice(0, 3), "Nenhum jogador agendou missões.", "Raids")}
 
-                            {/* Botão para abrir o Modal de Agendamentos */}
                             {meetingsRanking.length > 3 && (
                                 <button 
                                     onClick={() => setActiveModal('meetings')}
@@ -260,22 +283,17 @@ export default function RankingPage() {
             </div>
 
             {/* MODAL DE RANKING COMPLETO */}
-           {/* MODAL DE RANKING COMPLETO */}
             {activeModal && (() => {
-                // Descobre qual lista estamos exibindo no momento
                 const activeRankingList = activeModal === 'works' ? worksRanking : meetingsRanking;
                 const labelScore = activeModal === 'works' ? 'Pubs' : 'Raids';
                 
-                // Encontra a posição do usuário logado na lista
                 const myRankIndex = activeRankingList.findIndex(u => u.id === currentUserId);
                 const myRankData = myRankIndex !== -1 ? activeRankingList[myRankIndex] : null;
 
                 return (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                        {/* Container Principal do Modal com flex-col para separar Header, Corpo e Rodapé */}
                         <div className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl shadow-black/50 overflow-hidden">
                             
-                            {/* 1. Header do Modal (Fixo no Topo) */}
                             <div className="flex justify-between items-center p-6 border-b border-gray-800 bg-gray-900/50 shrink-0">
                                 <div className="flex items-center gap-3">
                                     {activeModal === 'works' ? (
@@ -300,15 +318,13 @@ export default function RankingPage() {
                                 </button>
                             </div>
 
-                            {/* 2. Corpo do Modal (Área Rolável) */}
                             <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
                                 {activeModal === 'works'
-                                    ? renderRankingList(worksRanking, "Nenhum jogador publicou trabalhos.", "Pubs")
-                                    : renderRankingList(meetingsRanking, "Nenhum jogador agendou missões.", "Raids")
+                                    ? renderRankingList(worksRanking, "Nenhum jogador publicou trabalhos no período selecionado.", "Pubs")
+                                    : renderRankingList(meetingsRanking, "Nenhum jogador agendou missões no período selecionado.", "Raids")
                                 }
                             </div>
 
-                            {/* 3. Rodapé do Modal (Travado na Base com o Seu Rank) */}
                             <div className="bg-gray-900 border-t border-gray-800 p-4 sm:px-6 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.3)] z-10 relative">
                                 <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3 pl-2">
                                     Sua Posição Atual
@@ -316,7 +332,6 @@ export default function RankingPage() {
                                 
                                 {myRankData ? (
                                     <div className="flex items-center p-3 rounded-xl border border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                                        
                                         <div className="w-16 flex justify-center items-center font-black text-xl">
                                             {myRankIndex < 3 ? getRankStyles(myRankIndex).icon : <span className="text-amber-500">#{myRankIndex + 1}</span>}
                                         </div>
@@ -343,7 +358,6 @@ export default function RankingPage() {
                                                 {myRankData.score} <span className="text-[10px] text-amber-500 uppercase ml-1">{labelScore}</span>
                                             </div>
                                         </div>
-
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-center p-4 rounded-xl border border-dashed border-gray-700 bg-gray-950">
