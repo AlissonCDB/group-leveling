@@ -2,16 +2,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trophy, Medal, Award, Briefcase, CalendarPlus, X } from 'lucide-react'; 
-import RankSidebar from '@/features/ranking/components/RankSidebar'; // 🔴 Nova Sidebar!
+import { Trophy, Medal, Award, Briefcase, CalendarPlus, X, Star } from 'lucide-react'; 
+import RankSidebar from '@/features/ranking/components/RankSidebar';
 
 export default function RanksClientView({ allUsersData, currentUserId }) {
     const router = useRouter();
     
     const [activeModal, setActiveModal] = useState(null); 
     const [periodFilter, setPeriodFilter] = useState('all'); 
-
-    // 🔴 Zero useEffects! Recebemos tudo pronto e apenas processamos com useMemo
+    const [viewMode, setViewMode] = useState('quantidade'); 
 
     // 1. Processa o Ranking de TRABALHOS
     const worksRanking = useMemo(() => {
@@ -26,13 +25,38 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
 
             const score = validWorks.length;
             const level = Math.floor(score / 2) + 1;
-            return { id: user.id, name: `${user.user_name || ''} ${user.last_name || ''}`.trim(), score, level };
-        })
-        .filter(user => user.score > 0)
-        .sort((a, b) => b.score - a.score); 
-    }, [allUsersData, periodFilter]); 
 
-    // 2. Processa o Ranking de AGENDAMENTOS
+            // 🔴 LÓGICA BLINDADA: Garante que só soma números reais
+            let totalRating = 0;
+            let ratingCount = 0;
+            
+            validWorks.forEach(work => {
+                // Garante que é sempre lido como Array, mesmo que o Supabase retorne um único objeto
+                const evaluations = Array.isArray(work.User_Work) ? work.User_Work : (work.User_Work ? [work.User_Work] : []);
+                
+                evaluations.forEach(uw => {
+                    if (uw && uw.rating) {
+                        totalRating += Number(uw.rating); // Força a conversão para número
+                        ratingCount++;
+                    }
+                });
+            });
+            
+            const avgRating = ratingCount > 0 ? (totalRating / ratingCount) : 0;
+
+            return { 
+                id: user.id, 
+                name: `${user.user_name || ''} ${user.last_name || ''}`.trim(), 
+                score, 
+                avgRating: parseFloat(avgRating.toFixed(1)),
+                level 
+            };
+        })
+        .filter(user => viewMode === 'quantidade' ? user.score > 0 : user.avgRating > 0)
+        .sort((a, b) => viewMode === 'quantidade' ? b.score - a.score : b.avgRating - a.avgRating); 
+    }, [allUsersData, periodFilter, viewMode]); 
+
+    // 2. Processa o Ranking de AGENDAMENTOS (RAIDS)
     const meetingsRanking = useMemo(() => {
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -45,11 +69,35 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
 
             const score = validMeetings.length;
             const level = Math.floor(score / 2) + 1;
-            return { id: user.id, name: `${user.user_name || ''} ${user.last_name || ''}`.trim(), score, level };
+
+            // 🔴 LÓGICA BLINDADA: Garante que só soma números reais
+            let totalRating = 0;
+            let ratingCount = 0;
+            
+            validMeetings.forEach(raid => {
+                const evaluations = Array.isArray(raid.User_Meeting) ? raid.User_Meeting : (raid.User_Meeting ? [raid.User_Meeting] : []);
+                
+                evaluations.forEach(um => {
+                    if (um && um.rating) {
+                        totalRating += Number(um.rating); // Força a conversão para número
+                        ratingCount++;
+                    }
+                });
+            });
+            
+            const avgRating = ratingCount > 0 ? (totalRating / ratingCount) : 0;
+
+            return { 
+                id: user.id, 
+                name: `${user.user_name || ''} ${user.last_name || ''}`.trim(), 
+                score, 
+                avgRating: parseFloat(avgRating.toFixed(1)),
+                level 
+            };
         })
-        .filter(user => user.score > 0)
-        .sort((a, b) => b.score - a.score);
-    }, [allUsersData, periodFilter]); 
+        .filter(user => viewMode === 'quantidade' ? user.score > 0 : user.avgRating > 0)
+        .sort((a, b) => viewMode === 'quantidade' ? b.score - a.score : b.avgRating - a.avgRating);
+    }, [allUsersData, periodFilter, viewMode]); 
 
     const handleViewProfile = (userId) => {
         router.push(`/profile/${userId}`);
@@ -81,7 +129,7 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                     <div className="w-16 text-center">Rank</div>
                     <div className="flex-1">Membro</div>
                     <div className="w-24 text-center">Nível</div>
-                    <div className="w-32 text-right">{labelScore}</div>
+                    <div className="w-32 text-right">{viewMode === 'quantidade' ? labelScore : 'Média'}</div>
                 </div>
 
                 {rankingData.map((user, index) => {
@@ -108,7 +156,13 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                                 <div className="text-sm font-bold text-gray-300">Lvl <span className={rankStyle.color}>{user.level}</span></div>
                             </div>
                             <div className="w-32 text-right">
-                                <div className="text-sm font-black text-gray-400">{user.score} <span className="text-[10px] text-gray-600 uppercase ml-1">{labelScore}</span></div>
+                                {viewMode === 'quantidade' ? (
+                                    <div className="text-sm font-black text-gray-400">{user.score} <span className="text-[10px] text-gray-600 uppercase ml-1">{labelScore}</span></div>
+                                ) : (
+                                    <div className="text-sm font-black text-amber-500 flex items-center justify-end gap-1">
+                                        {user.avgRating} <Star size={14} fill="currentColor" />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );
@@ -121,28 +175,47 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
         <div className="flex flex-col md:flex-row w-screen h-screen overflow-hidden font-sans relative">
             <RankSidebar />
             <div className="w-full md:w-2/3 h-3/5 md:h-full bg-gray-950 flex flex-col p-6 md:p-12 overflow-y-auto scrollbar-hide">
-                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                     <h1 className="text-2xl font-black text-white uppercase tracking-widest">
                         Quadro de <span className="text-amber-500">Líderes</span>
                     </h1>
-                    <div className="flex space-x-2 bg-gray-900 p-1 rounded-lg border border-gray-800">
-                        {['all', 'month', 'week'].map((filter) => (
-                            <button
-                                key={filter}
-                                onClick={() => setPeriodFilter(filter)}
-                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all ${
-                                    periodFilter === filter 
-                                    ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
-                                    : 'text-gray-500 hover:text-amber-400'
-                                }`}
-                            >
-                                {filter === 'all' ? 'Global' : filter === 'month' ? 'Mensal' : 'Semanal'}
-                            </button>
-                        ))}
+                    
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg border border-gray-800">
+                            {['quantidade', 'qualidade'].map((mode) => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setViewMode(mode)}
+                                    className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                                        viewMode === mode 
+                                        ? 'bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.4)]' 
+                                        : 'text-gray-500 hover:text-amber-400'
+                                    }`}
+                                >
+                                    Por {mode}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex space-x-1 bg-gray-900 p-1 rounded-lg border border-gray-800">
+                            {['all', 'month', 'week'].map((filter) => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setPeriodFilter(filter)}
+                                    className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                                        periodFilter === filter 
+                                        ? 'bg-gray-700 text-white' 
+                                        : 'text-gray-500 hover:text-gray-300'
+                                    }`}
+                                >
+                                    {filter === 'all' ? 'Global' : filter === 'month' ? 'Mensal' : 'Semanal'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Removemos o spinner visual de loading daqui! */}
                 <div className="flex flex-col gap-12 pb-12">
                     <section>
                         <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -151,10 +224,12 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-gray-200 tracking-tight">Top Contribuidores</h2>
-                                <p className="text-xs text-gray-500 uppercase tracking-widest">Baseado em Trabalhos Publicados</p>
+                                <p className="text-xs text-gray-500 uppercase tracking-widest">
+                                    {viewMode === 'quantidade' ? 'Baseado em Trabalhos Publicados' : 'Baseado na Qualidade dos Trabalhos'}
+                                </p>
                             </div>
                         </div>
-                        {renderRankingList(worksRanking.slice(0, 3), "Nenhum jogador publicou trabalhos.", "Pubs")}
+                        {renderRankingList(worksRanking.slice(0, 3), `Nenhum jogador pontuou em ${viewMode} neste período.`, "Pubs")}
                         {worksRanking.length > 3 && (
                             <button onClick={() => setActiveModal('works')} className="w-full mt-4 py-3 border-2 border-dashed border-amber-500/30 text-amber-500 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-amber-500/10 hover:border-amber-400 transition-all">
                                 + Ver ranking completo ({worksRanking.length} membros)
@@ -169,10 +244,12 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-gray-200 tracking-tight">Top Organizadores</h2>
-                                <p className="text-xs text-gray-500 uppercase tracking-widest">Baseado em Raids Agendadas</p>
+                                <p className="text-xs text-gray-500 uppercase tracking-widest">
+                                    {viewMode === 'quantidade' ? 'Baseado em Raids Agendadas' : 'Baseado na Qualidade das Raids'}
+                                </p>
                             </div>
                         </div>
-                        {renderRankingList(meetingsRanking.slice(0, 3), "Nenhum jogador agendou missões.", "Raids")}
+                        {renderRankingList(meetingsRanking.slice(0, 3), `Nenhum jogador pontuou em ${viewMode} neste período.`, "Raids")}
                         {meetingsRanking.length > 3 && (
                             <button onClick={() => setActiveModal('meetings')} className="w-full mt-4 py-3 border-2 border-dashed border-blue-500/30 text-blue-500 font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-blue-500/10 hover:border-blue-400 transition-all">
                                 + Ver ranking completo ({meetingsRanking.length} membros)
@@ -182,7 +259,7 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                 </div>
             </div>
 
-            {/* MODAL DE RANKING COMPLETO (Inalterado) */}
+            {/* MODAL DE RANKING COMPLETO */}
             {activeModal && (() => {
                 const activeRankingList = activeModal === 'works' ? worksRanking : meetingsRanking;
                 const labelScore = activeModal === 'works' ? 'Pubs' : 'Raids';
@@ -200,7 +277,7 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                                             Ranking <span className={activeModal === 'works' ? 'text-amber-500' : 'text-blue-500'}>Completo</span>
                                         </h2>
                                         <p className="text-xs text-gray-500 uppercase tracking-widest">
-                                            {activeModal === 'works' ? 'Todos os contribuintes de trabalhos' : 'Todos os organizadores de raids'}
+                                            {activeModal === 'works' ? `Contribuidores por ${viewMode}` : `Organizadores por ${viewMode}`}
                                         </p>
                                     </div>
                                 </div>
@@ -210,10 +287,12 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                             </div>
                             <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
                                 {activeModal === 'works'
-                                    ? renderRankingList(worksRanking, "Nenhum jogador publicou trabalhos no período selecionado.", "Pubs")
-                                    : renderRankingList(meetingsRanking, "Nenhum jogador agendou missões no período selecionado.", "Raids")
+                                    ? renderRankingList(worksRanking, `Nenhum jogador pontuou em ${viewMode}.`, "Pubs")
+                                    : renderRankingList(meetingsRanking, `Nenhum jogador pontuou em ${viewMode}.`, "Raids")
                                 }
                             </div>
+                            
+                            {/* Sua Posição (Rodapé do Modal) */}
                             <div className="bg-gray-900 border-t border-gray-800 p-4 sm:px-6 shrink-0 shadow-[0_-10px_20px_rgba(0,0,0,0.3)] z-10 relative">
                                 <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-3 pl-2">Sua Posição Atual</p>
                                 {myRankData ? (
@@ -233,12 +312,18 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                                             <div className="text-sm font-bold text-gray-300">Lvl <span className="text-amber-400">{myRankData.level}</span></div>
                                         </div>
                                         <div className="w-32 text-right">
-                                            <div className="text-sm font-black text-amber-400">{myRankData.score} <span className="text-[10px] text-amber-500 uppercase ml-1">{labelScore}</span></div>
+                                            {viewMode === 'quantidade' ? (
+                                                <div className="text-sm font-black text-amber-400">{myRankData.score} <span className="text-[10px] text-amber-500 uppercase ml-1">{labelScore}</span></div>
+                                            ) : (
+                                                <div className="text-sm font-black text-amber-500 flex items-center justify-end gap-1">
+                                                    {myRankData.avgRating} <Star size={14} fill="currentColor" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-center p-4 rounded-xl border border-dashed border-gray-700 bg-gray-950">
-                                        <p className="text-gray-500 italic text-sm">Você ainda não pontuou e não entrou neste ranking.</p>
+                                        <p className="text-gray-500 italic text-sm">Você não possui pontuação válida em {viewMode} neste período.</p>
                                     </div>
                                 )}
                             </div>

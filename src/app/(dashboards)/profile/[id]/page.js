@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { Briefcase, CalendarPlus, ChevronLeft, User as UserIcon, FileText, MapPin } from 'lucide-react';
-import RankSidebar from '@/components/View/RankSidebar';
+import { Briefcase, CalendarPlus, ChevronLeft, User as UserIcon, FileText, MapPin, Lock } from 'lucide-react'; // Adicionado ícone Lock
+
+import RankSidebar from '@/features/ranking/components/RankSidebar';
 
 export default function ProfilePage() {
-    const { id } = useParams(); // Pega o ID da URL
+    const { id } = useParams(); 
     const router = useRouter();
     
     const [userData, setUserData] = useState(null);
@@ -21,7 +22,6 @@ export default function ProfilePage() {
             setLoading(true);
 
             try {
-                // 1. Buscar dados básicos do usuário
                 const { data: user, error: userErr } = await supabase
                     .from('User')
                     .select('*, Class(name_class)')
@@ -31,7 +31,6 @@ export default function ProfilePage() {
                 if (userErr) throw userErr;
                 setUserData(user);
 
-                // 2. Buscar Trabalhos publicados por este usuário
                 const { data: worksData } = await supabase
                     .from('Work')
                     .select('*')
@@ -40,11 +39,10 @@ export default function ProfilePage() {
                 
                 setWorks(worksData || []);
 
-                // 3. Buscar Raids (Meetings) organizadas por este usuário
                 const { data: meetingsData } = await supabase
                     .from('Meeting')
                     .select('*')
-                    .eq('creator', id) // 'creator' é o FK no seu diagrama
+                    .eq('creator', id) 
                     .order('meeting_date', { ascending: false });
 
                 setMeetings(meetingsData || []);
@@ -72,7 +70,6 @@ export default function ProfilePage() {
             <RankSidebar />
 
             <div className="flex-1 h-full overflow-y-auto p-6 md:p-12 scrollbar-hide">
-                {/* Botão Voltar */}
                 <button 
                     onClick={() => router.back()}
                     className="flex items-center gap-2 text-gray-500 hover:text-amber-500 transition-colors mb-8 group"
@@ -81,7 +78,6 @@ export default function ProfilePage() {
                     <span className="text-xs font-bold uppercase tracking-widest">Voltar</span>
                 </button>
 
-                {/* HEADER DO PERFIL */}
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-12 border-b border-gray-800 pb-12">
                     <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                         <UserIcon size={60} className="text-white" />
@@ -104,7 +100,6 @@ export default function ProfilePage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     
-                    {/* COLUNA: TRABALHOS PUBLICADOS */}
                     <section>
                         <div className="flex items-center gap-3 mb-6">
                             <Briefcase className="text-amber-500" size={24} />
@@ -113,14 +108,17 @@ export default function ProfilePage() {
                         
                         <div className="space-y-4">
                             {works.length > 0 ? works.map(work => (
-                                <div key={work.id} className="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl hover:border-amber-500/50 transition-colors group">
+                                <div key={work.id} className="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl hover:border-gray-700 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-200 group-hover:text-amber-400 transition-colors">{work.subject}</h3>
+                                        <h3 className="font-bold text-gray-200">{work.subject}</h3>
                                         <span className="text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded uppercase">{work.type}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-500">{work.graduation}</span>
-                                        <a href={work.archive} target="_blank" className="text-xs font-bold text-amber-500 hover:underline">Acessar Documento</a>
+                                        {/* 🔴 MUDANÇA AQUI: Link a removido e alterado para texto estático */}
+                                        <span className="flex items-center gap-1 text-[10px] font-bold text-gray-600 uppercase tracking-widest cursor-not-allowed select-none">
+                                            <Lock size={12} /> Registo Arquivado
+                                        </span>
                                     </div>
                                 </div>
                             )) : (
@@ -129,7 +127,6 @@ export default function ProfilePage() {
                         </div>
                     </section>
 
-                    {/* COLUNA: RAIDS ORGANIZADAS */}
                     <section>
                         <div className="flex items-center gap-3 mb-6">
                             <CalendarPlus className="text-blue-500" size={24} />
@@ -138,7 +135,7 @@ export default function ProfilePage() {
 
                         <div className="space-y-4">
                             {meetings.length > 0 ? meetings.map(raid => (
-                                <div key={raid.id} className="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl hover:border-blue-500/50 transition-colors">
+                                <div key={raid.id} className="bg-gray-900/50 border border-gray-800 p-4 rounded-2xl hover:border-gray-700 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-gray-200">{raid.content || "Missão Sem Nome"}</h3>
                                         <span className="text-[10px] text-blue-400 font-bold uppercase">{raid.duration}</span>
