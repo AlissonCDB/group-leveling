@@ -1,8 +1,7 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
 
-// --- Estilos Base Reutilizáveis ---
-
+// 1. O Recipiente Principal
 export const CardContainer = styled.div`
   position: relative;
   display: flex;
@@ -13,6 +12,7 @@ export const CardContainer = styled.div`
   border: 1px solid;
   border-radius: 1rem;
   transition: all 300ms ease-in-out;
+  height: 100%; /* Garante que os cartões esticam no grid */
 
   ${({ $isPast, $variant }) => {
     if ($isPast) return css`
@@ -38,6 +38,23 @@ export const CardContainer = styled.div`
   }}
 `;
 
+// 2. O Cabeçalho Padrão (Flexível e Responsivo)
+export const CardHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.15);
+  padding-bottom: 1rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+`;
+
 export const CardTitle = styled.h4`
   font-size: 1.5rem;
   font-weight: 900;
@@ -45,10 +62,31 @@ export const CardTitle = styled.h4`
   letter-spacing: -0.025em;
   transition: color 300ms;
   margin-bottom: 0.25rem;
+  line-height: 1.2;
   color: ${({ $isPast }) => ($isPast ? '#9ca3af' : '#ffffff')};
 
   ${CardContainer}:hover & {
     color: ${({ $isPast }) => ($isPast ? '#ffffff' : '#c084fc')};
+  }
+`;
+
+// 3. O Container de Tags Lateral
+export const CardTagsWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  gap: 0.35rem;
+  
+  @media (min-width: 768px) {
+    width: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+    padding-left: 1rem;
+    border-left: 2px dashed rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -64,11 +102,9 @@ export const CardTag = styled.span`
   justify-content: center;
   gap: 0.35rem;
   white-space: nowrap;
-  width: 120px;
-
-  @media (min-width: 768px) {
-    width: 150px;
-  }
+  
+  /* Largura fixa apenas no desktop para alinhamento. No mobile abraça o conteúdo */
+  @media (min-width: 768px) { width: 150px; }
 
   ${({ $color }) => {
     const colors = {
@@ -86,9 +122,13 @@ export const CardTag = styled.span`
   }}
 `;
 
+// 4. Seções Internas e Box de Informações
 export const CardSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 
-  label {
+  > label {
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -96,7 +136,10 @@ export const CardSection = styled.div`
     text-transform: uppercase;
     font-weight: 800;
     letter-spacing: 0.05em;
-    color: ${({ $isPast }) => ($isPast ? '#6b7280' : '#a855f7')};
+    color: ${({ $themeColor, $isPast }) => {
+      if ($isPast) return '#6b7280';
+      return $themeColor === 'blue' ? '#3b82f6' : '#a855f7'; 
+    }};
     margin-bottom: 0.35rem;
   }
 `;
@@ -106,22 +149,86 @@ export const InfoBox = styled.div`
   padding: 0.75rem;
   border-radius: 0.5rem;
   border: 1px solid #1f2937;
-  font-size: 0.75rem;
-  color: #e5e7eb;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 `;
 
+// 5. Linhas de Logística Universais (Usadas em Raids e Works)
+export const LogisticRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  width: ${({ $fullWidth }) => ($fullWidth ? '100%' : 'calc(50% - 0.25rem)')}; /* 50% em desktop se não for full */
+  
+  &:last-child { border-bottom: none; }
 
+  @media (max-width: 767px) { width: 100%; }
 
+  .icon-wrapper {
+    color: ${({ $themeColor, $isPast }) => {
+      if ($isPast) return '#6b7280';
+      return $themeColor === 'blue' ? '#3b82f6' : '#a855f7';
+    }};
+    margin-top: 0.1rem;
+  }
+`;
+
+export const LogisticData = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  
+  .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  
+  .value {
+    font-size: 0.85rem;
+    color: #f3f4f6;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Variante para links clicáveis (ex: Arquivos e URLs) */
+  .value.clickable {
+    color: ${({ $themeColor }) => ($themeColor === 'blue' ? '#93c5fd' : '#c084fc')};
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+    text-underline-offset: 2px;
+    cursor: pointer;
+    transition: color 0.2s;
+    &:hover { color: #ffffff; }
+  }
+
+  .sub-value {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: 0.5rem;
+  }
+`;
+
+// 6. O Rodapé Universal
 export const CardFooter = styled.div`
   display: flex;
+  flex-wrap: wrap; /* Permite quebrar linha no mobile se houver muitos botões */
   justify-content: space-between;
   align-items: center;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid ${({ $themeColor }) => ($themeColor === 'blue' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(168, 85, 247, 0.2)')};
   margin-top: 1rem;
+  gap: 1rem;
 `;
 
-// Transformamos em algo dinâmico para aceitar cores diferentes (Ex: roxo pra Raid, azul pra Work)
 export const CardUser = styled.div`
   display: flex;
   align-items: center;
@@ -131,9 +238,11 @@ export const CardUser = styled.div`
     width: 2rem;
     height: 2rem;
     border-radius: 9999px;
-    background: ${({ $color }) =>
-    $color === 'purple' ? 'linear-gradient(to bottom right, #9333ea, #4338ca)' :
-      'linear-gradient(to bottom right, #2563eb, #0e7490)'};
+    background: ${({ $themeColor }) =>
+      $themeColor === 'blue' 
+        ? 'linear-gradient(to bottom right, #2563eb, #0e7490)' 
+        : 'linear-gradient(to bottom right, #9333ea, #4338ca)'
+    };
     display: flex;
     align-items: center;
     justify-content: center;
@@ -157,17 +266,13 @@ export const CardUser = styled.div`
     
     .role {
       font-size: 10px;
-      color: ${({ $color }) => ($color === 'purple' ? '#c084fc' : '#60a5fa')};
+      color: ${({ $themeColor }) => ($themeColor === 'blue' ? '#60a5fa' : '#c084fc')};
       font-weight: 700;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
     }
   }
 `;
 
-// Componente Wrapper Genérico
 export const Card = ({ children, isPast, variant, className }) => {
   return (
     <CardContainer $isPast={isPast} $variant={variant} className={className}>

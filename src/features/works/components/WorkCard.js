@@ -1,74 +1,72 @@
 import React from 'react';
-import { FileText, GraduationCap, Link as LinkIcon, User, Edit } from 'lucide-react';
-import { Card, CardTitle, CardTag, CardSection, InfoBox, CardFooter, CardUser } from '@/components/UI/Card';
+import { FileText, GraduationCap, Link as LinkIcon, Edit, BookOpen, Download } from 'lucide-react';
+import { 
+    Card, CardHeader, CardTitle, CardTagsWrapper, CardTag, 
+    CardSection, InfoBox, LogisticRow, LogisticData, 
+    CardFooter, CardUser 
+} from '@/components/UI/Card';
 import { PrimaryButton } from '@/components/UI/Form';
-
-// 🔴 IMPORT CORRIGIDO: Como moram na mesma pasta, usamos apenas "./"
-import { HeaderRow, TagsColumn, ArchiveButton } from './WorkCard.styles';
 
 export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
     const isCreator = currentUserId === work.user_id;
 
     return (
         <Card variant={isCreator ? 'highlight' : 'default'}>
-            <div>
-                <HeaderRow>
+            
+            <CardHeader>
+                <div className='flex flex-col items-start w-full md:w-auto'>
+                    <label className="text-[10px] uppercase font-bold text-blue-500 tracking-widest mb-1">Título do Arquivo</label>
                     <CardTitle>{work.subject}</CardTitle>
-                    
-                    <TagsColumn>
-                        <CardTag $color="blue">
-                            <FileText size={10} /> <span>{work.type}</span>
-                        </CardTag>
-                        <CardTag $color="emerald">
-                            <GraduationCap size={10} /> <span>{work.graduation}</span>
-                        </CardTag>
-                    </TagsColumn>
-                </HeaderRow>
+                </div>
 
-                <CardSection>
-                    <label><LinkIcon size={12} /> Link do Arquivo</label>
-                    <InfoBox $bg="dark">
-                        <ArchiveButton onClick={onDownload}>
-                            {work.archive}
-                        </ArchiveButton>
-                    </InfoBox>
-                </CardSection>
-            </div>
+                <CardTagsWrapper>
+                    <CardTag $color="blue">
+                        <FileText size={10} /> <span>{work.type}</span>
+                    </CardTag>
+                    <CardTag $color="emerald">
+                        <GraduationCap size={10} /> <span>{work.graduation}</span>
+                    </CardTag>
+                </CardTagsWrapper>
+            </CardHeader>
 
-            <CardFooter>
-                <CardUser $color="blue">
+            <CardSection $themeColor="blue">
+                <label><BookOpen size={12} /> Detalhes do Arquivo</label>
+                <InfoBox $bg="dark">
+                    <LogisticRow $fullWidth $themeColor="blue">
+                        <div className="icon-wrapper"><LinkIcon size={16} /></div>
+                        <LogisticData $themeColor="blue">
+                            <span className="label">Link de Acesso Seguro</span>
+                            <span className="value clickable" onClick={onDownload} title={work.archive}>
+                                {work.archive}
+                            </span>
+                        </LogisticData>
+                    </LogisticRow>
+                </InfoBox>
+            </CardSection>
+
+            <CardFooter $themeColor="blue">
+                <CardUser $themeColor="blue">
                     <div className="avatar">
                         {work.User?.user_name?.[0].toUpperCase() || '?'}
                     </div>
                     <div className="details">
-                        <span className="name">
-                            {work.User?.user_name || 'Desconhecido'} {work.User?.last_name || ''}
-                        </span>
-                        <span className="role">
-                            <User size={10} /> Autor
-                        </span>
+                        <span className="name">{work.User?.user_name || 'Desconhecido'} {work.User?.last_name || ''}</span>
+                        <span className="role">Autor</span>
                     </div>
                 </CardUser>
                 
                 <div className="flex gap-2 items-center">
                     {isCreator && (
-                        <button 
-                            onClick={() => onEdit && onEdit(work)} 
-                            className="p-1.5 text-amber-500/70 hover:text-amber-400 hover:bg-amber-900/30 rounded-lg transition-all border border-amber-500/30" 
-                            title="Editar Trabalho"
-                        >
+                        <button onClick={() => onEdit && onEdit(work)} className="p-2 text-amber-500/70 hover:text-amber-400 hover:bg-amber-900/30 rounded-lg transition-all border border-amber-500/30">
                             <Edit size={16} />
                         </button>
                     )}
-                    
-                    <PrimaryButton 
-                        onClick={onDownload}
-                        style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#2563eb' }}
-                    >
-                        Acessar
+                    <PrimaryButton onClick={onDownload} style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#2563eb' }}>
+                        <span className="flex items-center gap-1.5"><Download size={12} /> Acessar</span>
                     </PrimaryButton>
                 </div>
             </CardFooter>
+            
         </Card>
     );
 }
