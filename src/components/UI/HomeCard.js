@@ -65,7 +65,7 @@ const GlowLine = styled.div`
   }
 `;
 
-export default function MenuCard({ name, desc, icon: Icon, colorKey, onClick }) {
+export default function HomeCard({ name, desc, icon: Icon, colorKey, onClick }) {
   return (
     <CardContainer $themeColor={colorKey} onClick={onClick}>
       <div className="flex flex-col items-center text-center">

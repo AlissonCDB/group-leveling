@@ -55,6 +55,20 @@ export const meetingService = {
         });
     },
 
+    async updateRaid(supabase, meetingId, updateData) {
+        if (!meetingId) throw new Error("ID da reunião é obrigatório.");
+
+        const { data, error } = await supabase
+            .from('Meeting')
+            .update(updateData)
+            .eq('id', meetingId) // Se sua coluna no banco for 'id_meeting', troque aqui
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
     // Realiza o vínculo do usuário com a reunião
     async joinMeeting(supabase, meetingId, userId) {
         if (!meetingId) throw new Error("ID da reunião é obrigatório.");

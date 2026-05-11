@@ -110,13 +110,68 @@ export const InfoBox = styled.div`
   color: #e5e7eb;
 `;
 
+
+
+export const CardFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1rem;
+`;
+
+// Transformamos em algo dinâmico para aceitar cores diferentes (Ex: roxo pra Raid, azul pra Work)
+export const CardUser = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: ${({ $color }) =>
+    $color === 'purple' ? 'linear-gradient(to bottom right, #9333ea, #4338ca)' :
+      'linear-gradient(to bottom right, #2563eb, #0e7490)'};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    
+    .name {
+      font-size: 0.75rem;
+      color: white;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .role {
+      font-size: 10px;
+      color: ${({ $color }) => ($color === 'purple' ? '#c084fc' : '#60a5fa')};
+      font-weight: 700;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  }
+`;
+
 // Componente Wrapper Genérico
-const Card = ({ children, isPast, variant, className }) => {
+export const Card = ({ children, isPast, variant, className }) => {
   return (
     <CardContainer $isPast={isPast} $variant={variant} className={className}>
       {children}
     </CardContainer>
   );
 };
-
-export default Card;

@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Swords, Briefcase, Trophy, Power } from 'lucide-react';
 import Image from 'next/image';
-import MenuCard from '@/components/View/HomeCard';
-
-// Certifique-se que o caminho do import está correto (UI ou View)
-import PendingRatingsAlert from '@/components/View/PendingRatingsAlert';
+import MenuCard from '@/components/UI/HomeCard';
+import PendingRatingsAlert from '@/features/profile/components/PendingRatingsAlert';
 
 const MENU_OPTIONS = [
   {

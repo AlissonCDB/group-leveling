@@ -8,14 +8,14 @@ import { Star, AlertCircle, Clock, ArrowRight, Target, BookOpen } from 'lucide-r
 export default function PendingRatingsAlert() {
     const [isOpen, setIsOpen] = useState(false);
     
-    // 🔴 NOVOS ESTADOS: Contadores separados
+    // Contadores separados para missões e trabalhos
     const [pendingRaids, setPendingRaids] = useState(0);
     const [pendingWorks, setPendingWorks] = useState(0);
     
     const router = useRouter();
 
     useEffect(() => {
-        // Verifica a sessão para não chatear o usuário em todos os cliques
+        // Verifica a sessão para não repetir o alerta constantemente
         const hasSeenAlert = sessionStorage.getItem('hasSeenRatingAlert');
         if (hasSeenAlert) return;
 
@@ -68,7 +68,7 @@ export default function PendingRatingsAlert() {
                 const rCount = validRaids.length;
                 const wCount = validWorks.length;
 
-                // Se houver qualquer pendência, atualiza os estados e abre o modal
+                // Se houver qualquer pendência, abre o modal
                 if (rCount > 0 || wCount > 0) {
                     setPendingRaids(rCount);
                     setPendingWorks(wCount);
@@ -99,7 +99,7 @@ export default function PendingRatingsAlert() {
     const total = pendingRaids + pendingWorks;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-gray-950 border border-amber-500/30 rounded-2xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden">
                 
                 {/* Cabeçalho */}
@@ -118,7 +118,6 @@ export default function PendingRatingsAlert() {
                         A guilda precisa do seu feedback! Você tem <strong className="text-amber-400 text-lg">{total}</strong> {total === 1 ? 'atividade aguardando' : 'atividades aguardando'} a sua nota.
                     </p>
 
-                    {/* 🔴 MUDANÇA: Caixas de contagem visual */}
                     <div className="flex w-full gap-3 mb-8">
                         {pendingRaids > 0 && (
                             <div className="flex-1 bg-gray-900 border border-emerald-500/30 rounded-xl p-4 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.1)]">
@@ -137,17 +136,10 @@ export default function PendingRatingsAlert() {
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-gray-500 mb-8 bg-gray-900 px-4 py-2 rounded-lg border border-gray-800">
-                        <Star size={14} className="text-amber-500/50" />
-                        <span className="text-[10px] uppercase font-bold tracking-widest">Avaliar ajuda a destacar os melhores!</span>
-                        <Star size={14} className="text-amber-500/50" />
-                    </div>
-
-                    {/* Botões */}
                     <div className="flex flex-col gap-3 w-full">
                         <button 
                             onClick={handleEvaluateNow}
-                            className="w-full flex items-center justify-center gap-2 py-3.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)]"
+                            className="w-full flex items-center justify-center gap-2 py-3.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
                         >
                             Realizar Avaliações Agora <ArrowRight size={16} />
                         </button>
@@ -160,7 +152,6 @@ export default function PendingRatingsAlert() {
                         </button>
                     </div>
                 </div>
-
             </div>
         </div>
     );
