@@ -2,9 +2,10 @@ import BaseSidebar from '@/components/Layout/BaseSidebar';
 import { Briefcase, FilePlus } from 'lucide-react';
 import { PrimaryButton } from '@/components/UI/Form';
 
-export default function WorkSidebar({ onOpenCreateModal }) {
+export default function WorkSidebar({ onOpenCreateModal, scrollTop }) {
     return (
-        <BaseSidebar 
+        <BaseSidebar
+            scrollTop={scrollTop}
             themeColor="#1d4ed8" /* blue-700 */
             icon={Briefcase}
             title="Central de Trabalhos"

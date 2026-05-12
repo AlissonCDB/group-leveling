@@ -2,30 +2,29 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { Briefcase } from 'lucide-react'; 
+import { Briefcase } from 'lucide-react';
 
 // Importando componentes de UI e Modais (ajuste os caminhos se tiver mudado)
 import Modal from '@/components/UI/Modal';
-import ModalTrabalho from '@/app/(dashboards)/works/ModalTrabalho'; 
-import ModalEdicaoTrabalho from '@/app/(dashboards)/works/ModalEdicaoTrabalho';
-
+import ModalTrabalho from '@/features/works/components/ModalTrabalho';
+import ModalEdicaoTrabalho from '@/features/works/components/ModalEdicaoTrabalho';
 import WorkSidebar from '@/features/works/components/WorkSidebar';
 import WorkFilters from '@/features/works/components/WorkFilters';
 import WorkCard from '@/features/works/components/WorkCard';
 
 export default function WorksClientView({ initialWorks, currentUserId }) {
-    // 🔴 Removemos o useEffect e o loading! Usamos diretamente initialWorks recebido do Server.
-    
-    // Controlo de Modais
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [workToEdit, setWorkToEdit] = useState(null);
-    
-    // Estados de Filtro
-    const [typeFilter, setTypeFilter] = useState('all'); 
-    const [graduationFilter, setGraduationFilter] = useState('all'); 
 
-    // Extrai categorias únicas diretamente dos dados recebidos
+
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [graduationFilter, setGraduationFilter] = useState('all');
+    const [scrollTop, setScrollTop] = useState(0);
+    const handleScroll = (e) => setScrollTop(e.target.scrollTop);
+
+
     const uniqueTypes = Array.from(new Set(initialWorks.map(w => w.type).filter(Boolean)));
     const uniqueGraduations = Array.from(new Set(initialWorks.map(w => w.graduation).filter(Boolean)));
 
@@ -34,7 +33,7 @@ export default function WorksClientView({ initialWorks, currentUserId }) {
         setIsEditModalOpen(true);
     };
 
-    // Lógica para registrar o acesso ao trabalho (mantida intacta)
+
     const handleDownloadWork = async (work) => {
         if (work.archive) {
             window.open(work.archive, '_blank');
@@ -72,7 +71,7 @@ export default function WorksClientView({ initialWorks, currentUserId }) {
         }
     };
 
-    // Aplicação dos Filtros em cima do initialWorks
+
     const filteredWorks = initialWorks.filter((work) => {
         let matchesType = true;
         let matchesGraduation = true;
@@ -84,36 +83,39 @@ export default function WorksClientView({ initialWorks, currentUserId }) {
     });
 
     return (
-        <div className="flex flex-col md:flex-row w-screen h-screen overflow-hidden font-sans">
-            
-            {/* Painel Esquerdo */}
-            <WorkSidebar onOpenCreateModal={() => setIsModalOpen(true)} />
+        <div 
+    className="flex flex-col md:flex-row w-screen h-screen bg-gray-950 overflow-y-auto md:overflow-hidden"
+    onScroll={handleScroll}
+  >
 
-            <div className="w-full md:w-2/3 h-3/5 md:h-full bg-gray-950 flex flex-col p-6 md:p-12 overflow-y-auto scrollbar-hide">
-                
+            {/* Painel Esquerdo */}
+            <WorkSidebar onOpenCreateModal={() => setIsModalOpen(true)} scrollTop={scrollTop} />
+
+            <div className="flex-1 w-full md:w-2/3 flex flex-col p-6 md:p-12 h-max md:h-full overflow-visible md:overflow-y-auto scrollbar-hide mb-25 relative z-0">
+
                 {/* Cabeçalho com Filtros */}
-                <WorkFilters 
+                <WorkFilters
                     typeFilter={typeFilter} setTypeFilter={setTypeFilter}
                     graduationFilter={graduationFilter} setGraduationFilter={setGraduationFilter}
-                    uniqueTypes={uniqueTypes} uniqueGraduations={uniqueGraduations} 
+                    uniqueTypes={uniqueTypes} uniqueGraduations={uniqueGraduations}
                     loading={false} // Removido o estado de loading
                 />
 
                 {/* RENDERIZAÇÃO DA LISTA */}
                 {filteredWorks.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed border-blue-500/20 rounded-2xl p-10">
+                    <div className="flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed border-purple-500/20 rounded-2xl p-10 mt-6">
                         <Briefcase size={48} className="text-gray-700 mb-4 opacity-50" />
                         <p className="text-gray-500 italic">Nenhum trabalho encontrado para esta combinação de filtros.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6 mt-6">
                         {filteredWorks.map((work) => (
-                            <WorkCard 
-                                key={work.id} 
-                                work={work} 
-                                currentUserId={currentUserId} 
-                                onEdit={openEditModal} 
-                                onDownload={() => handleDownloadWork(work)} 
+                            <WorkCard
+                                key={work.id}
+                                work={work}
+                                currentUserId={currentUserId}
+                                onEdit={openEditModal}
+                                onDownload={() => handleDownloadWork(work)}
                             />
                         ))}
                     </div>
@@ -127,9 +129,9 @@ export default function WorksClientView({ initialWorks, currentUserId }) {
 
             <Modal isOpen={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setWorkToEdit(null); }} closeOnOverlayClick={false}>
                 {workToEdit && (
-                    <ModalEdicaoTrabalho 
-                        workData={workToEdit} 
-                        onFinish={() => { setIsEditModalOpen(false); setWorkToEdit(null); }} 
+                    <ModalEdicaoTrabalho
+                        workData={workToEdit}
+                        onFinish={() => { setIsEditModalOpen(false); setWorkToEdit(null); }}
                     />
                 )}
             </Modal>

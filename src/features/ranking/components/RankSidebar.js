@@ -6,11 +6,12 @@ import { PrimaryButton } from '@/components/UI/Form';
 import { useRouter } from 'next/navigation';
 import BaseSidebar from '@/components/Layout/BaseSidebar';
 
-export default function RankSidebar() {
+export default function RankSidebar({ scrollTop }) {
     const router = useRouter();
 
     return (
         <BaseSidebar 
+            scrollTop={scrollTop}
             themeColor="#b45309" /* amber-700 */
             accentColor="#fcd34d" /* amber-300 */
             icon={Trophy}
