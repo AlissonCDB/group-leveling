@@ -4,10 +4,10 @@ import {
     Calendar, Clock, MonitorPlay, MapPin, Wifi, Layers, Edit, AlignLeft, Users
 } from 'lucide-react';
 
-import { 
-    Card, CardHeader, CardTitle, CardTagsWrapper, CardTag, 
-    CardSection, InfoBox, LogisticRow, LogisticData, 
-    CardFooter, CardUser 
+import {
+    Card, CardHeader, CardTitle, CardTagsWrapper, CardTag,
+    CardSection, InfoBox, LogisticRow, LogisticData,
+    CardFooter, CardUser
 } from '@/components/UI/Card';
 import { PrimaryButton } from '@/components/UI/Form';
 
@@ -44,7 +44,7 @@ const ParticipantBadge = styled.div`
   }
 `;
 
-export default function RaidCard({ raid, currentUserId, onEdit, onEnter }) {
+export default function RaidCard({ raid, currentUserId, onEdit, onEnter, onLeave }) {
     const now = new Date();
     const isCreator = currentUserId === raid.creator;
     const isMember = raid.User_Meeting?.some(m => m.id_user === currentUserId) || isCreator;
@@ -72,7 +72,7 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter }) {
 
     return (
         <Card isPast={isPast} variant={isCreator ? 'highlight' : 'default'}>
-            
+
             {/* CABEÇALHO */}
             <CardHeader>
                 <div className='flex flex-col items-start w-full md:w-auto'>
@@ -163,9 +163,20 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter }) {
                     {isPast ? (
                         <span className="px-3 py-2 bg-gray-800/50 border border-gray-700 text-[10px] uppercase font-bold text-gray-500 rounded-lg">Encerrada</span>
                     ) : isMember ? (
-                        <PrimaryButton style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#4f46e5' }} onClick={onEnter}>
-                            Acessar
-                        </PrimaryButton>
+                        <>
+                            {/* Botão de Sair apenas para membros (não criadores) */}
+                            {!isCreator && (
+                                <button
+                                    onClick={onLeave}
+                                    className="px-3 py-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 text-[10px] uppercase font-bold rounded-lg transition-colors"
+                                >
+                                    Abandonar
+                                </button>
+                            )}
+                            <PrimaryButton style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#4f46e5' }} onClick={onEnter}>
+                                Acessar
+                            </PrimaryButton>
+                        </>
                     ) : isFull ? (
                         <span className="px-3 py-2 bg-amber-500/10 border border-amber-500/30 text-[10px] uppercase font-bold text-amber-500 rounded-lg">Raid Cheia</span>
                     ) : (
@@ -175,7 +186,7 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter }) {
                     )}
                 </div>
             </CardFooter>
-            
+
         </Card>
     );
 }

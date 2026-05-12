@@ -62,7 +62,7 @@ export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
                         </button>
                     )}
                     <PrimaryButton onClick={onDownload} style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#2563eb' }}>
-                        <span className="flex items-center gap-1.5"><Download size={12} /> Acessar</span>
+                        <span className="flex items-center gap-1.5"><Download size={12} /> Baixar</span>
                     </PrimaryButton>
                 </div>
             </CardFooter>

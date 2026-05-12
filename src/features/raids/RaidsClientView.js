@@ -60,6 +60,29 @@ export default function RaidsClientView({ initialRaids, categories, templates, c
         }
     };
 
+    const handleLeaveRaid = async (raidOrId) => {
+        if (!currentUserId) return;
+
+        const meetingId = typeof raidOrId === 'object' ? (raidOrId.id || raidOrId.id_meeting) : raidOrId;
+        if (!meetingId) return;
+
+        //Confirmação simples para evitar cliques acidentais
+        if (!window.confirm("Tem certeza que deseja abandonar esta missão?")) return;
+
+        const supabase = createClient();
+
+        try {
+            await meetingService.leaveMeeting(supabase, meetingId, currentUserId);
+
+            // Atualiza a lista em background para refletir a saída imediatamente (atualiza o contador de vagas)
+            const raidsData = await meetingService.getAllRaids(supabase);
+            setRaids(raidsData || []);
+
+        } catch (error) {
+            console.error("Erro ao sair da raid:", error.message);
+        }
+    };
+
     const handleScroll = (e) => {
         setScrollTop(e.target.scrollTop);
     };
@@ -91,10 +114,10 @@ export default function RaidsClientView({ initialRaids, categories, templates, c
         .sort((a, b) => {
             const utcDateA = new Date(a.meeting_date);
             const dateA = new Date(utcDateA.getUTCFullYear(), utcDateA.getUTCMonth(), utcDateA.getUTCDate(), utcDateA.getUTCHours(), utcDateA.getUTCMinutes()).getTime();
-            
+
             const utcDateB = new Date(b.meeting_date);
             const dateB = new Date(utcDateB.getUTCFullYear(), utcDateB.getUTCMonth(), utcDateB.getUTCDate(), utcDateB.getUTCHours(), utcDateB.getUTCMinutes()).getTime();
-            
+
             return timeFilter === 'past' ? dateB - dateA : dateA - dateB;
         });
 
@@ -115,7 +138,7 @@ export default function RaidsClientView({ initialRaids, categories, templates, c
                     templateFilter={templateFilter} setTemplateFilter={setTemplateFilter}
                     categories={categories} templates={templates} loading={false}
                 />
-                
+
                 {filteredAndSortedRaids.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center border-2 border-dashed border-purple-500/20 rounded-2xl p-10 mt-6">
                         <MonitorPlay size={48} className="text-gray-700 mb-4 opacity-50" />
@@ -129,7 +152,8 @@ export default function RaidsClientView({ initialRaids, categories, templates, c
                                 raid={raid}
                                 currentUserId={currentUserId}
                                 onEdit={openEditModal}
-                                onEnter={() => handleEnterRaid(raid)} 
+                                onEnter={() => handleEnterRaid(raid)}
+                                onLeave={() => handleLeaveRaid(raid)} // 🔴 PASSE A PROPRIEDADE AQUI
                             />
                         ))}
                     </div>

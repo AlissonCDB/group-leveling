@@ -83,5 +83,18 @@ export const meetingService = {
             throw error;
         }
         return data;
+    },
+
+    //Remove o vínculo do usuário com a reunião
+    async leaveMeeting(supabase, meetingId, userId) {
+        if (!meetingId || !userId) throw new Error("ID da reunião e do utilizador são obrigatórios.");
+
+        const { data, error } = await supabase
+            .from('User_Meeting')
+            .delete()
+            .match({ id_meeting: meetingId, id_user: userId });
+
+        if (error) throw error;
+        return data;
     }
 };

@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Briefcase } from 'lucide-react';
-
-// Importando componentes de UI e Modais (ajuste os caminhos se tiver mudado)
 import Modal from '@/components/UI/Modal';
 import ModalTrabalho from '@/features/works/components/ModalTrabalho';
 import ModalEdicaoTrabalho from '@/features/works/components/ModalEdicaoTrabalho';
@@ -98,7 +96,7 @@ export default function WorksClientView({ initialWorks, currentUserId }) {
                     typeFilter={typeFilter} setTypeFilter={setTypeFilter}
                     graduationFilter={graduationFilter} setGraduationFilter={setGraduationFilter}
                     uniqueTypes={uniqueTypes} uniqueGraduations={uniqueGraduations}
-                    loading={false} // Removido o estado de loading
+                    loading={false}
                 />
 
                 {/* RENDERIZAÇÃO DA LISTA */}
