@@ -89,7 +89,16 @@ export default function ProfileClientView({ profile, initialWorks, initialRaids,
                                     <h4 className="text-white font-bold truncate mb-4">{work.subject}</h4>
                                     <div className="mt-auto pt-3 border-t border-gray-800 flex justify-end">
                                         {work.user_rating ? (
-                                            <div className="flex gap-1"><Star size={14} className="text-yellow-500 fill-yellow-500" /> {work.user_rating}/5</div>
+                                            /*  Estrelas desenhadas dinamicamente */
+                                            <div className="flex gap-1" title={`${work.user_rating} Estrelas`}>
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star 
+                                                        key={i} 
+                                                        size={14} 
+                                                        className={i < work.user_rating ? "text-yellow-500 fill-yellow-500" : "text-gray-700"} 
+                                                    />
+                                                ))}
+                                            </div>
                                         ) : (
                                             <button onClick={() => handleOpenModal(work, 'work')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-amber-600 px-3 py-1.5 rounded">Avaliar Material</button>
                                         )}
@@ -111,8 +120,20 @@ export default function ProfileClientView({ profile, initialWorks, initialRaids,
                                         <h4 className="text-white font-bold truncate mb-4">{raid.theme?.option || 'Sem Tema'}</h4>
                                         <div className="mt-auto pt-3 border-t border-gray-800 flex justify-end">
                                             {!hasPassed ? <span className="text-[10px] uppercase font-bold text-emerald-500">Em Breve</span>
-                                            : raid.user_rating ? <div className="flex gap-1"><Star size={14} className="text-yellow-500 fill-yellow-500" /> {raid.user_rating}/5</div>
-                                            : <button onClick={() => handleOpenModal(raid, 'raid')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-emerald-600 px-3 py-1.5 rounded">Avaliar Raid</button>}
+                                            : raid.user_rating ? (
+                                                /* 🔴 MUDANÇA: Estrelas desenhadas dinamicamente */
+                                                <div className="flex gap-1" title={`${raid.user_rating} Estrelas`}>
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star 
+                                                            key={i} 
+                                                            size={14} 
+                                                            className={i < raid.user_rating ? "text-yellow-500 fill-yellow-500" : "text-gray-700"} 
+                                                        />
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => handleOpenModal(raid, 'raid')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-emerald-600 px-3 py-1.5 rounded">Avaliar Raid</button>
+                                            )}
                                         </div>
                                     </div>
                                 );
