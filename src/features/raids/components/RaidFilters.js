@@ -13,7 +13,7 @@ import {
     FilterButton,
     GradientOverlay,
     ToggleButton
-} from './FiltersComponents';
+} from '@/components/UI/FiltersComponents';
 
 export default function RaidFilters({
     timeFilter, setTimeFilter,

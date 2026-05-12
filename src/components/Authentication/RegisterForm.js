@@ -76,10 +76,6 @@ export default function RegisterForm() {
         </div>
 
         <div className="w-full h-px bg-linear-to-r from-transparent via-purple-500/50 to-transparent my-2" />
-
-        {/*<p className="text-[10px] text-green-400 font-bold uppercase tracking-widest animate-pulse">
-          Sua conta foi criada. Verifique seu e-mail para despertar!
-        </p> */ }
       </div>
     );
   }
@@ -94,27 +90,36 @@ export default function RegisterForm() {
         <div className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= 2 ? 'bg-purple-500 shadow-[0_0_8px_#a855f7]' : 'bg-gray-800'}`} />
       </div>
 
-      {/* A MUDANÇA ESTÁ AQUI: 
-        Usamos CSS (hidden) em vez de condicionais do React (step === 1 && ...)
-        Isso mantém os inputs no DOM para que a Server Action receba os dados.
-      */}
-
       {/* CONTEÚDO PASSO 1 */}
       <div className={`space-y-4 animate-slide-up ${step !== 1 ? 'hidden' : 'block'}`}>
         <div>
           <Label>Email</Label>
           <StyledInput name="email" type="email" value={formData.email} onChange={handleChange} placeholder="hunter@guilda.com" required />
         </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label>Senha</Label>
             <StyledInput name="password" type="password" value={formData.password} onChange={handleChange} placeholder="••••••" required />
+            {/* Aviso de mínimo de caracteres */}
+            {formData.password.length > 0 && formData.password.length < 6 && (
+              <p className="text-red-400 text-[10px] font-bold tracking-wide mt-1 animate-pulse">
+                Mínimo de 6 caracteres
+              </p>
+            )}
           </div>
           <div>
             <Label>Confirmar</Label>
             <StyledInput name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••" required />
+            {/* Aviso de senhas diferentes */}
+            {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
+              <p className="text-red-400 text-[10px] font-bold tracking-wide mt-1 animate-pulse">
+                As senhas não coincidem
+              </p>
+            )}
           </div>
         </div>
+
         <PrimaryButton type="button" disabled={!isStep1Valid} onClick={() => setStep(2)}>
           Próximo: Afinidade
         </PrimaryButton>

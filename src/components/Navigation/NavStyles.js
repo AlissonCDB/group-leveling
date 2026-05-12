@@ -29,7 +29,6 @@ export const NavsContainer = styled.nav`
   }
 `
 
-// O Overlay que usa o backdrop-blur do CSS moderno
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -42,7 +41,6 @@ export const ModalOverlay = styled.div`
   animation: ${fadeIn} 0.2s ease-out;
 `;
 
-// Botão reutilizável que aceita a cor do gradiente via props
 export const NavButton = styled.button`
   position: relative;
   width: 100%;

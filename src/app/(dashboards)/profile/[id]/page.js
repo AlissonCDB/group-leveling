@@ -1,0 +1,62 @@
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import PublicProfileClientView from '@/features/profile/PublicProfileClientView';
+
+export default async function PublicProfilePage({ params }) {
+    
+    const { id } = await params;
+    
+    const supabase = await createClient();
+
+    // 1. Dados básicos
+    const { data: user, error: userErr } = await supabase
+        .from('User')
+        .select('*, Class(name_class)')
+        .eq('id', id)
+        .single();
+
+    if (userErr || !user) {
+        redirect('/home'); 
+    }
+
+    // 2. Trabalhos + Avaliações
+    const { data: worksData } = await supabase
+        .from('Work')
+        .select('*, User_Work(rating)')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+    
+    const processedWorks = (worksData || []).map(work => {
+        const ratings = Array.isArray(work.User_Work) ? work.User_Work : (work.User_Work ? [work.User_Work] : []);
+        let total = 0, count = 0;
+        ratings.forEach(r => {
+            if (r && r.rating) { total += Number(r.rating); count++; }
+        });
+        return { ...work, avgRating: count > 0 ? (total / count) : 0 };
+    });
+
+    // 3. Raids + Avaliações
+    const { data: meetingsData } = await supabase
+        .from('Meeting')
+        .select('*, User_Meeting(rating)')
+        .eq('creator', id) 
+        .order('meeting_date', { ascending: false });
+
+    const processedMeetings = (meetingsData || []).map(raid => {
+        const ratings = Array.isArray(raid.User_Meeting) ? raid.User_Meeting : (raid.User_Meeting ? [raid.User_Meeting] : []);
+        let total = 0, count = 0;
+        ratings.forEach(r => {
+            if (r && r.rating) { total += Number(r.rating); count++; }
+        });
+        return { ...raid, avgRating: count > 0 ? (total / count) : 0 };
+    });
+
+    // Passa os dados mastigados para a View
+    return (
+        <PublicProfileClientView 
+            userData={user} 
+            works={processedWorks} 
+            meetings={processedMeetings} 
+        />
+    );
+}
