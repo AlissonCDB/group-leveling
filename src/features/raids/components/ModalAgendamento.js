@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { createMeetingAction } from '@/app/actions';
 import { StyledInput, StyledTextArea, PrimaryButton, Label, StyledSelect } from '@/components/UI/Form';
+import { filterService } from '@/services/filter.service';
 import { Swords, Users, MapPin, Link, Clock, Calendar, Target, MonitorPlay, CheckCircle2 } from 'lucide-react';
 
 // Componente simples para o asterisco vermelho de obrigatório
@@ -36,20 +37,11 @@ export default function ModalAgendamento({ onFinish }) {
   useEffect(() => {
     async function loadFilters() {
       const supabase = createClient();
-      const { data, error } = await supabase.from('Filters').select('*');
-
-      if (error) {
+      try {
+        const grouped = await filterService.getFiltersGrouped(supabase);
+        setFilters(grouped);
+      } catch (error) {
         console.error("Erro ao carregar filtros:", error);
-        return;
-      }
-
-      if (data) {
-        setFilters({
-          platforms: data.filter(f => f.category?.trim().toLowerCase() === 'plataform_meeting'),
-          themes: data.filter(f => f.category?.trim().toLowerCase() === 'theme'),
-          templates: data.filter(f => f.category?.trim().toLowerCase() === 'meeting_tamplate'),
-          categories: data.filter(f => f.category?.trim().toLowerCase() === 'group_category')
-        });
       }
     }
     loadFilters();

@@ -1,3 +1,5 @@
+'use client';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 export const Container = styled.div`
@@ -217,3 +219,56 @@ export const ToggleButton = styled.button`
     font-size: 1.125rem;
   }
 `;
+
+export function FilterPanel({ title, subtitle, children }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <Container>
+            <HeaderGroup>
+                <Title>{title}</Title>
+                <Subtitle>{subtitle}</Subtitle>
+            </HeaderGroup>
+
+            <FiltersWrapper>
+                <ExpandableArea $isExpanded={isExpanded}>
+                    <FilterGrid>
+                        {children}
+                    </FilterGrid>
+                    {!isExpanded && <GradientOverlay />}
+                </ExpandableArea>
+
+                <ToggleButton onClick={() => setIsExpanded(!isExpanded)}>
+                    {isExpanded ? (
+                        <>Ver menos filtros <span>−</span></>
+                    ) : (
+                        <>Ver mais filtros <span>+</span></>
+                    )}
+                </ToggleButton>
+            </FiltersWrapper>
+        </Container>
+    );
+}
+
+// 2. O Grupo de Botões (gera os botões automaticamente a partir de um array)
+export function FilterOptionGroup({ label, options, activeValue, onChange, colorType = 'cyan' }) {
+    if (!options || options.length === 0) return null;
+
+    return (
+        <FilterCard>
+            <FilterLabel>{label}</FilterLabel>
+            <ButtonGroup>
+                {options.map((opt) => (
+                    <FilterButton
+                        key={opt.value}
+                        $active={activeValue === opt.value}
+                        $colorType={colorType}
+                        onClick={() => onChange(opt.value)}
+                    >
+                        {opt.label}
+                    </FilterButton>
+                ))}
+            </ButtonGroup>
+        </FilterCard>
+    );
+}

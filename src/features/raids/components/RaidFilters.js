@@ -1,133 +1,62 @@
-import React, { useState } from 'react';
-import {
-    Container,
-    HeaderGroup,
-    Title,
-    Subtitle,
-    FiltersWrapper,
-    ExpandableArea,
-    FilterGrid,
-    FilterCard,
-    FilterLabel,
-    ButtonGroup,
-    FilterButton,
-    GradientOverlay,
-    ToggleButton
-} from '@/components/UI/FiltersComponents';
+import React from 'react';
+import { FilterPanel, FilterOptionGroup } from '@/components/UI/FiltersComponents';
 
 export default function RaidFilters({
     timeFilter, setTimeFilter,
     categoryFilter, setCategoryFilter,
     templateFilter, setTemplateFilter,
-    categories, templates, loading
+    platformFilter, setPlatformFilter,
+    categories, templates, platforms, // <--- GARANTA QUE ESTAS 3 PALAVRAS ESTÃO AQUI
+    loading
 }) {
-    const [isExpanded, setIsExpanded] = useState(false);
+    if (loading) return null;
+
+    // Função auxiliar segura (usa fallback para array vazio caso o servidor demore a responder)
+    const mapToOptions = (items) => [
+        { value: 'all', label: 'Todas' },
+        ...(items || []).map(item => ({ value: item, label: item }))
+    ];
 
     return (
-        <Container>
-            <HeaderGroup>
-                <Title>
-                    Missões {timeFilter === 'past' ? 'Concluídas' : 'Ativas'}
-                </Title>
-                <Subtitle>Sincronizado com o servidor</Subtitle>
-            </HeaderGroup>
+        <FilterPanel 
+            title={`Missões ${timeFilter === 'past' ? 'Concluídas' : 'Ativas'}`} 
+            subtitle="Sincronizado com o servidor"
+        >
+            <FilterOptionGroup 
+                label="Status das Raids" 
+                options={[
+                    { value: 'all', label: 'Todas' },
+                    { value: 'past', label: 'Finalizadas' },
+                    { value: 'upcoming', label: 'Agendadas' }
+                ]} 
+                activeValue={timeFilter} 
+                onChange={setTimeFilter} 
+                colorType="blue" 
+            />
+            
+            <FilterOptionGroup 
+                label="Categorias das Raids" 
+                options={mapToOptions(categories)} 
+                activeValue={categoryFilter} 
+                onChange={setCategoryFilter} 
+                colorType="cyan" 
+            />
 
-            {!loading && (
-                <FiltersWrapper>
-                    <ExpandableArea $isExpanded={isExpanded}>
-                        <FilterGrid>
-                            
-                            {/* Filtro 1: Status */}
-                            <FilterCard>
-                                <FilterLabel>Status</FilterLabel>
-                                <ButtonGroup>
-                                    <FilterButton 
-                                        $active={timeFilter === 'all'} 
-                                        onClick={() => setTimeFilter('all')}
-                                    >
-                                        Histórico Geral
-                                    </FilterButton>
-                                    <FilterButton 
-                                        $active={timeFilter === 'past'} 
-                                        onClick={() => setTimeFilter('past')}
-                                    >
-                                        Já Foram
-                                    </FilterButton>
-                                    <FilterButton 
-                                        $active={timeFilter === 'upcoming'} 
-                                        onClick={() => setTimeFilter('upcoming')}
-                                    >
-                                        A Acontecer
-                                    </FilterButton>
-                                </ButtonGroup>
-                            </FilterCard>
+            <FilterOptionGroup 
+                label="Modelos" 
+                options={mapToOptions(templates)} 
+                activeValue={templateFilter} 
+                onChange={setTemplateFilter} 
+                colorType="cyan" 
+            />
 
-                            {/* Filtro 2: Categoria Dinâmica */}
-                            <FilterCard>
-                                <FilterLabel>Tipo de Trabalho</FilterLabel>
-                                {categories.length > 0 && (
-                                    <ButtonGroup>
-                                        <FilterButton 
-                                            $active={categoryFilter === 'all'} 
-                                            $colorType="cyan"
-                                            onClick={() => setCategoryFilter('all')}
-                                        >
-                                            Tudo
-                                        </FilterButton>
-                                        {categories.map(cat => (
-                                            <FilterButton 
-                                                key={cat} 
-                                                $active={categoryFilter === cat} 
-                                                $colorType="cyan"
-                                                onClick={() => setCategoryFilter(cat)}
-                                            >
-                                                {cat}
-                                            </FilterButton>
-                                        ))}
-                                    </ButtonGroup>
-                                )}
-                            </FilterCard>
-
-                            {/* Filtro 3: Modelos de Reunião Dinâmicos */}
-                            {templates.length > 0 && (
-                                <FilterCard>
-                                    <FilterLabel>Modelos</FilterLabel>
-                                    <ButtonGroup>
-                                        <FilterButton 
-                                            $active={templateFilter === 'all'} 
-                                            $colorType="cyan"
-                                            onClick={() => setTemplateFilter('all')}
-                                        >
-                                            Ambos
-                                        </FilterButton>
-                                        {templates.map(tpl => (
-                                            <FilterButton 
-                                                key={tpl} 
-                                                $active={templateFilter === tpl} 
-                                                $colorType="cyan"
-                                                onClick={() => setTemplateFilter(tpl)}
-                                            >
-                                                {tpl}
-                                            </FilterButton>
-                                        ))}
-                                    </ButtonGroup>
-                                </FilterCard>
-                            )}
-
-                        </FilterGrid>
-                        
-                        {!isExpanded && <GradientOverlay />}
-                    </ExpandableArea>
-
-                    <ToggleButton onClick={() => setIsExpanded(!isExpanded)}>
-                        {isExpanded ? (
-                            <>Ver menos filtros <span>−</span></>
-                        ) : (
-                            <>Ver mais filtros <span>+</span></>
-                        )}
-                    </ToggleButton>
-                </FiltersWrapper>
-            )}
-        </Container>
+            <FilterOptionGroup 
+                label="Plataformas" 
+                options={mapToOptions(platforms)} 
+                activeValue={platformFilter} 
+                onChange={setPlatformFilter} 
+                colorType="cyan" 
+            />
+        </FilterPanel>
     );
 }
