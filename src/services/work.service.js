@@ -53,5 +53,35 @@ export const workService = {
 
         if (error) throw error;
         return data;
+    },
+
+    async getUserWorks(supabase, userId) {
+        const { data } = await supabase
+            .from('Work')
+            .select('*')
+            .eq('user_id', userId)
+            .order('id', { ascending: false });
+
+        return data || [];
+    },
+
+    async getDownloadedWorks(supabase, userId) {
+        const { data } = await supabase
+            .from('User_Work')
+            .select(`id, rating, comment, Work ( *, User (user_name, last_name) )`)
+            .eq('id_user', userId);
+
+        if (!data) return [];
+
+        // Lógica de tratamento transferida para cá
+        return data
+            .filter(item => item.Work && item.Work.user_id !== userId)
+            .map(item => ({
+                ...item.Work,
+                user_work_id: item.id,
+                user_rating: item.rating,
+                user_comment: item.comment
+            }))
+            .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     }
 };

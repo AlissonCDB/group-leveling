@@ -95,8 +95,13 @@ export async function register(previousState, formData) {
 
 export async function logout() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
-  revalidatePath('/', 'layout');
+
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("Erro interno do Supabase no logout:", error);
+  }
+
   redirect('/');
 }
 
@@ -180,159 +185,161 @@ export async function updateMeetingAction(previousState, formData) {
 }
 
 export async function publishWorkAction(prevState, formData) {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    // 1. VALIDAR O USUÁRIO E PEGAR O ID DELE
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+  // 1. VALIDAR O USUÁRIO E PEGAR O ID DELE
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
 
-    const { data: userData, error: userError } = await supabase
-        .from('User')
-        .select('id')
-        .eq('id_login', authUser.id)
-        .single();
+  const { data: userData, error: userError } = await supabase
+    .from('User')
+    .select('id')
+    .eq('id_login', authUser.id)
+    .single();
 
-    if (userError || !userData) {
-        return { success: false, message: "Perfil não encontrado no banco de dados." };
+  if (userError || !userData) {
+    return { success: false, message: "Perfil não encontrado no banco de dados." };
+  }
+
+  try {
+    const file = formData.get('arquivo');
+    const subject = formData.get('disciplina');
+    const type = formData.get('tema');
+    const graduation = formData.get('graduation');
+
+    if (!file || typeof file === 'string' || file.size === 0) {
+      return { success: false, message: "O ficheiro é obrigatório. Por favor, anexe um documento." };
     }
 
-    try {
-        const file = formData.get('arquivo');
-        const subject = formData.get('disciplina');
-        const type = formData.get('tema');
-        const graduation = formData.get('graduation');
+    // 2. Upload do Arquivo para o Supabase Storage
+    // Nota: O nome foi ajustado para remover espaços, evitando problemas de URL
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const fileName = `${Date.now()}_${safeFileName}`;
 
-        if (!file || file.size === 0) throw new Error("Arquivo é obrigatório");
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from('trabalhos_arquivos') // O BUCKET DEVE ESTAR PÚBLICO NO SUPABASE
+      .upload(fileName, file);
 
-        // 2. Upload do Arquivo para o Supabase Storage
-        // Nota: O nome foi ajustado para remover espaços, evitando problemas de URL
-        const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-        const fileName = `${Date.now()}_${safeFileName}`;
-        
-        const { data: storageData, error: storageError } = await supabase.storage
-            .from('trabalhos_arquivos') // O BUCKET DEVE ESTAR PÚBLICO NO SUPABASE
-            .upload(fileName, file);
+    if (storageError) throw storageError;
 
-        if (storageError) throw storageError;
+    // Pegar a URL pública do arquivo
+    const { data: { publicUrl } } = supabase.storage
+      .from('trabalhos_arquivos')
+      .getPublicUrl(fileName);
 
-        // Pegar a URL pública do arquivo
-        const { data: { publicUrl } } = supabase.storage
-            .from('trabalhos_arquivos')
-            .getPublicUrl(fileName);
+    // 3. Salvar no Banco de Dados usando o Service
+    const workData = {
+      subject: subject,
+      type: type,
+      archive: publicUrl,
+      graduation: graduation || 'Não informada',
+      user_id: userData.id // VINCULA O TRABALHO A QUEM FEZ O UPLOAD
+    };
 
-        // 3. Salvar no Banco de Dados usando o Service
-        const workData = {
-            subject: subject,
-            type: type,
-            archive: publicUrl,
-            graduation: graduation || 'Não informada',
-            user_id: userData.id // VINCULA O TRABALHO A QUEM FEZ O UPLOAD
-        };
+    await workService.createWork(supabase, workData);
 
-        await workService.createWork(supabase, workData);
+    // Atualiza a lista de trabalhos na UI
+    revalidatePath('/works');
 
-        // Atualiza a lista de trabalhos na UI
-        revalidatePath('/works'); 
-        
-        return { success: true, message: "Trabalho publicado com sucesso!" };
+    return { success: true, message: "Trabalho publicado com sucesso!" };
 
-    } catch (error) {
-        console.error('Erro na action publishWorkAction:', error);
-        return { success: false, message: error.message || "Erro ao publicar trabalho." };
-    }
+  } catch (error) {
+    console.error('Erro na action publishWorkAction:', error);
+    return { success: false, message: error.message || "Erro ao publicar trabalho." };
+  }
 }
 
 export async function updateWorkAction(prevState, formData) {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
 
-    try {
-        const workId = formData.get('work_id');
-        const file = formData.get('arquivo');
-        const existingArchive = formData.get('existing_archive');
-        
-        let finalArchiveUrl = existingArchive;
+  try {
+    const workId = formData.get('work_id');
+    const file = formData.get('arquivo');
+    const existingArchive = formData.get('existing_archive');
 
-        // Se o utilizador enviou um novo ficheiro, fazemos o upload
-        if (file && file.size > 0) {
-            const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-            const fileName = `${Date.now()}_${safeFileName}`;
-            
-            const { error: storageError } = await supabase.storage
-                .from('trabalhos_arquivos') 
-                .upload(fileName, file);
+    let finalArchiveUrl = existingArchive;
 
-            if (storageError) throw storageError;
+    // Se o utilizador enviou um novo ficheiro, fazemos o upload
+    if (file && file.size > 0) {
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const fileName = `${Date.now()}_${safeFileName}`;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('trabalhos_arquivos')
-                .getPublicUrl(fileName);
-                
-            finalArchiveUrl = publicUrl;
-        }
+      const { error: storageError } = await supabase.storage
+        .from('trabalhos_arquivos')
+        .upload(fileName, file);
 
-        const workData = {
-            subject: formData.get('disciplina'),
-            type: formData.get('tema'),
-            graduation: formData.get('graduation'),
-            archive: finalArchiveUrl
-        };
+      if (storageError) throw storageError;
 
-        // Certifique-se de que o workService possui a função updateWork
-        await supabase.from('Work').update(workData).eq('id', workId);
+      const { data: { publicUrl } } = supabase.storage
+        .from('trabalhos_arquivos')
+        .getPublicUrl(fileName);
 
-        revalidatePath('/works'); 
-        return { success: true, message: "Trabalho atualizado com sucesso!" };
-
-    } catch (error) {
-        console.error('Erro na action updateWorkAction:', error);
-        return { success: false, message: error.message || "Erro ao atualizar trabalho." };
+      finalArchiveUrl = publicUrl;
     }
+
+    const workData = {
+      subject: formData.get('disciplina'),
+      type: formData.get('tema'),
+      graduation: formData.get('graduation'),
+      archive: finalArchiveUrl
+    };
+
+    // Certifique-se de que o workService possui a função updateWork
+    await supabase.from('Work').update(workData).eq('id', workId);
+
+    revalidatePath('/works');
+    return { success: true, message: "Trabalho atualizado com sucesso!" };
+
+  } catch (error) {
+    console.error('Erro na action updateWorkAction:', error);
+    return { success: false, message: error.message || "Erro ao atualizar trabalho." };
+  }
 }
 
 // Adicione isto no final do seu src/app/actions.js
 export async function postCommentAction(prevState, formData) {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) return { success: false, message: "Sessão expirada. Faça login." };
 
-    const { data: userData, error: userError } = await supabase
-        .from('User')
-        .select('id')
-        .eq('id_login', authUser.id)
-        .single();
+  const { data: userData, error: userError } = await supabase
+    .from('User')
+    .select('id')
+    .eq('id_login', authUser.id)
+    .single();
 
-    if (userError || !userData) {
-        return { success: false, message: "Perfil não encontrado." };
+  if (userError || !userData) {
+    return { success: false, message: "Perfil não encontrado." };
+  }
+
+  try {
+    const meetingId = formData.get('meeting_id');
+    // Mantemos o nome do campo do formulário como 'content', mas enviamos para a coluna 'text'
+    const commentText = formData.get('content');
+
+    if (!commentText || commentText.trim() === '') {
+      return { success: false, message: "O comentário não pode estar vazio." };
     }
 
-    try {
-        const meetingId = formData.get('meeting_id');
-        // Mantemos o nome do campo do formulário como 'content', mas enviamos para a coluna 'text'
-        const commentText = formData.get('content'); 
+    // AQUI ESTÁ A CORREÇÃO: Usar a coluna 'text'
+    const { error } = await supabase.from('Comments').insert([{
+      meeting_id: meetingId,
+      user_id: userData.id,
+      text: commentText
+    }]);
 
-        if (!commentText || commentText.trim() === '') {
-            return { success: false, message: "O comentário não pode estar vazio." };
-        }
+    if (error) throw error;
 
-        // AQUI ESTÁ A CORREÇÃO: Usar a coluna 'text'
-        const { error } = await supabase.from('Comments').insert([{ 
-            meeting_id: meetingId, 
-            user_id: userData.id, 
-            text: commentText 
-        }]);
+    // Opcional: Revalidar o path se estiver a usar cache
+    // revalidatePath(`/groups/${meetingId}`); 
+    return { success: true, message: "Mensagem enviada!" };
 
-        if (error) throw error;
-
-        // Opcional: Revalidar o path se estiver a usar cache
-        // revalidatePath(`/groups/${meetingId}`); 
-        return { success: true, message: "Mensagem enviada!" };
-
-    } catch (error) {
-        console.error('Erro ao enviar comentário:', error);
-        return { success: false, message: "Erro ao enviar a mensagem." };
-    }
+  } catch (error) {
+    console.error('Erro ao enviar comentário:', error);
+    return { success: false, message: "Erro ao enviar a mensagem." };
+  }
 }

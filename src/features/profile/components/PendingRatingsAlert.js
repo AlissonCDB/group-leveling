@@ -2,153 +2,58 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
-import { Star, AlertCircle, Clock, ArrowRight, Target, BookOpen } from 'lucide-react';
+import { AlertCircle, ArrowRight, X } from 'lucide-react';
 
-export default function PendingRatingsAlert() {
+export default function PendingRatingsAlert({ pendingTotal }) {
     const [isOpen, setIsOpen] = useState(false);
-    
-    // Contadores separados para missões e trabalhos
-    const [pendingRaids, setPendingRaids] = useState(0);
-    const [pendingWorks, setPendingWorks] = useState(0);
-    
     const router = useRouter();
 
     useEffect(() => {
-        // Verifica a sessão para não repetir o alerta constantemente
         const hasSeenAlert = sessionStorage.getItem('hasSeenRatingAlert');
-        if (hasSeenAlert) return;
-
-        async function checkPendingRatings() {
-            const supabase = createClient();
+        
+        // Se houver pendências e o alerta ainda não foi mostrado nesta sessão
+        if (pendingTotal > 0 && !hasSeenAlert) {
+            setIsOpen(true);
             
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            if (!authUser) return;
-
-            const { data: userData } = await supabase.from('User').select('id').eq('id_login', authUser.id).single();
-            if (!userData) return;
-            
-            const userId = userData.id;
-            const now = new Date();
-
-            try {
-                // 1. Busca Raids participadas SEM NOTA
-                const { data: raidsData } = await supabase
-                    .from('User_Meeting')
-                    .select('id, Meeting!inner(meeting_date, creator)')
-                    .eq('id_user', userId)
-                    .is('rating', null);
-
-                const validRaids = (raidsData || []).filter(pr => {
-                    if (!pr.Meeting) return false;
-                    
-                    const utcDate = new Date(pr.Meeting.meeting_date);
-                    const raidDate = new Date(
-                        utcDate.getUTCFullYear(),
-                        utcDate.getUTCMonth(),
-                        utcDate.getUTCDate(),
-                        utcDate.getUTCHours(),
-                        utcDate.getUTCMinutes()
-                    );
-                    
-                    return (raidDate < now) && (pr.Meeting.creator !== userId);
-                });
-
-                // 2. Busca Trabalhos acessados SEM NOTA
-                const { data: worksData } = await supabase
-                    .from('User_Work')
-                    .select('id, Work!inner(user_id)')
-                    .eq('id_user', userId)
-                    .is('rating', null);
-
-                const validWorks = (worksData || []).filter(pw => {
-                    return pw.Work && pw.Work.user_id !== userId;
-                });
-
-                const rCount = validRaids.length;
-                const wCount = validWorks.length;
-
-                // Se houver qualquer pendência, abre o modal
-                if (rCount > 0 || wCount > 0) {
-                    setPendingRaids(rCount);
-                    setPendingWorks(wCount);
-                    setIsOpen(true);
-                }
-
-            } catch (error) {
-                console.error("Erro ao checar avaliações pendentes:", error);
-            }
+            // Mesmo que ele saia da página sem clicar em nada, não aparecerá mais.
+            sessionStorage.setItem('hasSeenRatingAlert', 'true');
         }
+    }, [pendingTotal]);
 
-        checkPendingRatings();
-    }, []);
-
-    const handleEvaluateLater = () => {
-        sessionStorage.setItem('hasSeenRatingAlert', 'true');
+    const closeAlert = (path = null) => {
         setIsOpen(false);
-    };
-
-    const handleEvaluateNow = () => {
-        sessionStorage.setItem('hasSeenRatingAlert', 'true');
-        setIsOpen(false);
-        router.push('/profile'); 
+        if (path) router.push(path);
     };
 
     if (!isOpen) return null;
 
-    const total = pendingRaids + pendingWorks;
-
     return (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-gray-950 border border-amber-500/30 rounded-2xl w-full max-w-md flex flex-col shadow-[0_0_50px_rgba(245,158,11,0.15)] overflow-hidden">
+        <div className="fixed bottom-6 right-6 z-9999 w-[320px] max-w-[calc(100vw-3rem)] animate-in slide-in-from-bottom-8 fade-in duration-500">
+            <div className="bg-gray-950 border border-amber-500/30 rounded-2xl shadow-[0_10px_40px_rgba(245,158,11,0.2)] overflow-hidden relative">
                 
-                {/* Cabeçalho */}
-                <div className="bg-amber-500/10 p-6 flex flex-col items-center border-b border-amber-500/20">
-                    <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mb-4 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.4)]">
-                        <AlertCircle size={32} className="text-amber-500" />
-                    </div>
-                    <h2 className="text-xl font-black text-white uppercase tracking-widest text-center">
-                        Avaliações Pendentes
-                    </h2>
-                </div>
-                
-                {/* Corpo */}
-                <div className="p-8 flex flex-col items-center text-center">
-                    <p className="text-sm text-gray-400 font-medium leading-relaxed mb-6">
-                        A guilda precisa do seu feedback! Você tem <strong className="text-amber-400 text-lg">{total}</strong> {total === 1 ? 'atividade aguardando' : 'atividades aguardando'} a sua nota.
-                    </p>
+                <button onClick={() => closeAlert()} className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors">
+                    <X size={16} />
+                </button>
 
-                    <div className="flex w-full gap-3 mb-8">
-                        {pendingRaids > 0 && (
-                            <div className="flex-1 bg-gray-900 border border-emerald-500/30 rounded-xl p-4 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                                <Target size={24} className="text-emerald-500 mb-2" />
-                                <span className="text-3xl font-black text-white leading-none mb-1">{pendingRaids}</span>
-                                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">{pendingRaids === 1 ? 'Missão' : 'Missões'}</span>
-                            </div>
-                        )}
-                        
-                        {pendingWorks > 0 && (
-                            <div className="flex-1 bg-gray-900 border border-amber-500/30 rounded-xl p-4 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.1)]">
-                                <BookOpen size={24} className="text-amber-500 mb-2" />
-                                <span className="text-3xl font-black text-white leading-none mb-1">{pendingWorks}</span>
-                                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-widest">{pendingWorks === 1 ? 'Material' : 'Materiais'}</span>
-                            </div>
-                        )}
+                <div className="p-5">
+                    <div className="flex items-start gap-4 mb-4">
+                        <div className="w-10 h-10 shrink-0 bg-amber-500/20 rounded-full flex items-center justify-center border border-amber-500/30">
+                            <AlertCircle size={20} className="text-amber-500" />
+                        </div>
+                        <div className="pr-4">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest leading-tight mb-1">Feedback Pendente</h3>
+                            <p className="text-xs text-gray-400">
+                                <strong className="text-amber-400">{pendingTotal}</strong> {pendingTotal === 1 ? 'atividade aguarda' : 'atividades aguardam'} a sua nota.
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 w-full">
-                        <button 
-                            onClick={handleEvaluateNow}
-                            className="w-full flex items-center justify-center gap-2 py-3.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
-                        >
-                            Realizar Avaliações Agora <ArrowRight size={16} />
+                    <div className="flex gap-2">
+                        <button onClick={() => closeAlert()} className="flex-1 py-2.5 bg-gray-900 border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white rounded-lg font-bold uppercase text-[9px] tracking-widest transition-all">
+                            Depois
                         </button>
-                        
-                        <button 
-                            onClick={handleEvaluateLater}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-transparent border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all"
-                        >
-                            <Clock size={14} /> Avaliar Mais Tarde
+                        <button onClick={() => closeAlert('/profile')} className="flex-2 flex items-center justify-center gap-1.5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-black uppercase text-[9px] tracking-widest transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                            Avaliar Agora <ArrowRight size={12} />
                         </button>
                     </div>
                 </div>

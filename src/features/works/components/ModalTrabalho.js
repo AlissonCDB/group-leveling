@@ -3,16 +3,15 @@
 import { useActionState, useEffect, useState } from 'react';
 import { publishWorkAction } from '@/app/actions';
 import { StyledInput, PrimaryButton, Label, StyledSelect } from '@/components/UI/Form';
-import { UploadCloud, FileText } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, Briefcase, GraduationCap } from 'lucide-react';
 
-const Req = () => <span className="text-red-500 ml-1 text-lg leading-none">*</span>;
+const Req = () => <span className="text-red-500 ml-1 font-bold">*</span>;
 
-export default function ModalTrabalho({ onFinish }) {
+export default function ModalTrabalho({ onFinish, workTypes = [], semester = [] }) {
   const [state, action, isPending] = useActionState(publishWorkAction, undefined);
   const [showSuccess, setShowSuccess] = useState(false);
   const [fileName, setFileName] = useState('');
 
-  // Bloqueia o scroll do fundo
   useEffect(() => {
     document.documentElement.classList.add('modal-open-raid');
     return () => document.documentElement.classList.remove('modal-open-raid');
@@ -21,120 +20,87 @@ export default function ModalTrabalho({ onFinish }) {
   useEffect(() => {
     if (state?.success) {
       setShowSuccess(true);
-      const timer = setTimeout(() => { if (onFinish) onFinish(); }, 2000);
-      return () => clearTimeout(timer);
+      setTimeout(() => onFinish(), 2000);
     }
   }, [state, onFinish]);
 
   if (showSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-12 animate-in fade-in zoom-in duration-300">
-        <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center border-2 border-blue-500 mb-6 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-          <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-          </svg>
+        <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center border-2 border-blue-500 mb-6 shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+          <CheckCircle2 className="w-10 h-10 text-blue-400" />
         </div>
-        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Trabalho Enviado!</h2>
-        <p className="text-blue-300 font-medium text-center italic">"O seu conhecimento foi adicionado ao arquivo."</p>
+        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Arquivo Enviado!</h2>
+        <p className="text-blue-300 italic text-sm">"O conhecimento da Guilda aumentou."</p>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in w-full">
-      <div className="mb-6 text-center">
-        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300 uppercase tracking-tighter">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+      <div className="mb-8 text-center">
+        <div className="flex justify-center mb-3">
+          <div className="p-3 bg-blue-900/30 rounded-full border border-blue-500/30">
+            <Briefcase size={28} className="text-blue-400" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-white to-blue-400 uppercase tracking-tighter">
           Novo Trabalho
         </h2>
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">
-          Campos com <span className="text-red-500">*</span> são obrigatórios
+        <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-2 bg-gray-900/50 inline-block px-3 py-1 rounded-full border border-gray-800">
+          Campos com <span className="text-red-500 font-bold">*</span> são obrigatórios
         </p>
       </div>
 
-      <form action={action} className="space-y-4">
-        
-        <div>
-          <Label className="flex items-center">Assunto / Disciplina <Req/></Label>
-          <StyledInput 
-            name="disciplina" 
-            required 
-            placeholder="Ex: Engenharia de Software II, Cálculo..." 
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form action={action} className="space-y-6" encType="multipart/form-data">
+        <div className="p-4 bg-gray-900/40 border border-gray-800 rounded-xl space-y-4">
           <div>
-            <Label className="flex items-center">Tipo de Trabalho <Req/></Label>
-            <StyledSelect name="tema" required defaultValue="">
-              <option value="" disabled>Selecione...</option>
-              <option value="Resumo">Resumo</option>
-              <option value="Artigo">Artigo</option>
-              <option value="Apresentação">Apresentação</option>
-              <option value="Projeto/Código">Projeto / Código</option>
-              <option value="TCC/Monografia">TCC / Monografia</option>
-              <option value="Outro">Outro</option>
-            </StyledSelect>
+            <Label className="flex items-center gap-2 mb-1.5"><FileText size={16} className="text-blue-400" /> Assunto / Disciplina <Req /></Label>
+            <StyledInput name="disciplina" required placeholder="Ex: Engenharia de Software II..." />
           </div>
-          
-          <div>
-            <Label className="flex items-center">Nível / Semestre <Req/></Label>
-            <StyledSelect name="graduation" required defaultValue="">
-              <option value="" disabled>Selecione o nível...</option>
-              <option value="1º Semestre">1º Semestre</option>
-              <option value="2º Semestre">2º Semestre</option>
-              <option value="3º Semestre">3º Semestre</option>
-              <option value="4º Semestre">4º Semestre</option>
-              <option value="5º Semestre">5º Semestre</option>
-              <option value="6º Semestre">6º Semestre</option>
-              <option value="Geral/Nenhum">Geral / Nenhum</option>
-            </StyledSelect>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="flex items-center gap-2 mb-1.5"><Briefcase size={16} className="text-blue-400" /> Tipo <Req /></Label>
+              <StyledSelect name="tema" required defaultValue="">
+                <option value="" disabled>Selecione...</option>
+                {workTypes.map(type => <option key={type.id} value={type.option}>{type.option}</option>)}
+              </StyledSelect>
+            </div>
+
+            <div>
+              <Label className="flex items-center gap-2 mb-1.5"><GraduationCap size={16} className="text-blue-400" /> Semestre <Req /></Label>
+              <StyledSelect name="graduation" required defaultValue="">
+                <option value="" disabled>Selecione...</option>
+                {semester.map(sem => <option key={sem.id} value={sem.option}>{sem.option}</option>)}
+              </StyledSelect>
+            </div>
           </div>
         </div>
 
-        {/* UPLOAD DE FICHEIRO ESTILIZADO */}
         <div>
-          <Label className="flex items-center">Arquivo a partilhar <Req/></Label>
-          <div className="relative">
-            <input 
-              type="file" 
-              name="arquivo" 
-              id="arquivo"
-              required
-              className="hidden"
-              onChange={(e) => setFileName(e.target.files[0]?.name || '')}
-            />
-            <label 
-              htmlFor="arquivo"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-500/30 rounded-2xl cursor-pointer bg-gray-900/50 hover:bg-blue-900/20 hover:border-blue-400 transition-all group"
-            >
-              {fileName ? (
-                <div className="flex flex-col items-center text-center">
-                    <FileText size={32} className="text-cyan-400 mb-2" />
-                    <span className="text-sm font-bold text-white max-w-200px truncate">{fileName}</span>
-                    <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest group-hover:text-cyan-300">Clique para trocar</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center text-center">
-                    <UploadCloud size={32} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-bold text-gray-300">Clique para anexar ou arraste</span>
-                    <span className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">PDF, DOCX, ZIP, etc.</span>
-                </div>
-              )}
-            </label>
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <PrimaryButton type="submit" disabled={isPending} className="bg-blue-600 hover:bg-blue-500">
-            {isPending ? 'A Enviar para o Arquivo...' : 'Publicar Trabalho'}
-          </PrimaryButton>
+          <Label className="flex items-center gap-2 mb-1.5"><UploadCloud size={16} className="text-blue-400" /> Arquivo <Req /></Label>
+          <input type="file" name="arquivo" id="arquivo" className="hidden" onChange={(e) => setFileName(e.target.files[0]?.name || '')} />
+          <label htmlFor="arquivo" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-500/30 rounded-2xl cursor-pointer bg-gray-900/50 hover:bg-blue-900/20 hover:border-blue-400 transition-all group">
+            {fileName ? (
+              <div className="text-center"><FileText size={32} className="text-blue-400 mb-2 mx-auto" /><span className="text-sm font-bold text-white block truncate max-w-xs">{fileName}</span></div>
+            ) : (
+              <div className="text-center"><UploadCloud size={32} className="text-blue-500 mb-2 mx-auto group-hover:scale-110 transition-transform" /><span className="text-sm font-bold text-gray-300">Anexar material de estudo</span></div>
+            )}
+          </label>
         </div>
 
         {state?.success === false && state?.message && (
-          <p className="text-center text-[10px] font-bold uppercase tracking-widest mt-2 text-red-400">
-            ❌ {state.message}
-          </p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-center animate-in shake">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-red-400">
+              Falha no Sistema: {state.message}
+            </p>
+          </div>
         )}
+
+        <PrimaryButton type="submit" disabled={isPending} className="bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
+          {isPending ? 'SINCRONIZANDO...' : 'PUBLICAR TRABALHO'}
+        </PrimaryButton>
       </form>
     </div>
   );

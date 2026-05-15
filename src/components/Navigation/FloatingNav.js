@@ -15,6 +15,12 @@ export default function FloatingNav() {
 
   const handleLogout = async () => {
     console.log("Deslogando do Group Leveling...");
+
+    // 1. Limpa as memórias visuais do frontend antes de sair
+    sessionStorage.removeItem('hasSeenStartScreen');
+    sessionStorage.removeItem('hasSeenRatingAlert');
+
+    // 2. Chama a action do servidor para destruir o cookie de autenticação
     await logout();
   };
 
