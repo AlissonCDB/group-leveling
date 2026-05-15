@@ -17,11 +17,13 @@ export function useRaidsFilter(initialRaids = []) {
                 let matchesTemplate = true;
                 let matchesCategory = true;
                 let matchesPlatform = true;
+                let matchesTheme = true;
                 let matchesTime = true;
 
                 if (filters.template !== 'all') matchesTemplate = raid.meeting_tamplate?.option === filters.template;
                 if (filters.category !== 'all') matchesCategory = raid.group_category?.option === filters.category;
                 if (filters.platform !== 'all') matchesPlatform = raid.plataform_meeting?.option === filters.platform;
+                if (filters.theme !== 'all') matchesTheme = raid.theme?.option === filters.theme;
 
                 const utcDate = new Date(raid.meeting_date);
                 const raidDate = new Date(
@@ -33,7 +35,7 @@ export function useRaidsFilter(initialRaids = []) {
                 if (filters.time === 'past') matchesTime = raidDate < now;
                 // se for 'all', matchesTime continua true
 
-                return matchesTemplate && matchesCategory && matchesPlatform && matchesTime;
+                return matchesTemplate && matchesCategory && matchesPlatform && matchesTheme && matchesTime;
             })
             .sort((a, b) => {
                 const utcDateA = new Date(a.meeting_date);
@@ -47,9 +49,9 @@ export function useRaidsFilter(initialRaids = []) {
             });
     }, [initialRaids, filters]);
 
-    return { 
-        filters, 
-        updateFilter, 
-        filteredAndSortedRaids 
+    return {
+        filters,
+        updateFilter,
+        filteredAndSortedRaids
     };
 }
