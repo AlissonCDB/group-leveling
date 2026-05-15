@@ -1,5 +1,3 @@
-// src/constants/filters.constants.js
-
 // 1. MAPEAMENTO DO BANCO DE DADOS (Supabase 'Filters' table)
 // Usado no filter.service.js para buscar e agrupar os dados corretamente
 export const DB_FILTER_CATEGORIES = {
@@ -52,7 +50,7 @@ export const getWorksFiltersConfig = (workTypesOptions, semesterOptions) => [
         color: 'blue' 
     },
     { 
-        key: 'type', // Alinhado com o DEFAULT_WORK_FILTERS
+        key: 'type',
         label: 'Tipo de Arquivo', 
         options: workTypesOptions, 
         color: 'blue' 
