@@ -163,6 +163,7 @@ export const FilterButton = styled.button`
       case 'purple': return '#9333ea'; // purple-600
       case 'emerald': return '#059669'; // emerald-600
       case 'gray-shadow': return '#374151'; // gray-700
+      case 'red': return '#880808';
       case 'blue-shadow':
       case 'blue':
       default: return '#2563eb'; // blue-600

@@ -96,5 +96,35 @@ export const meetingService = {
 
         if (error) throw error;
         return data;
+    },
+
+    async getUserMeetings(supabase, userId) {
+        const { data } = await supabase
+            .from('Meeting')
+            .select('*, group_category(option), plataform_meeting(option), meeting_tamplate(option), theme(option)')
+            .eq('creator', userId)
+            .order('meeting_date', { ascending: false });
+
+        return data || [];
+    },
+
+    async getParticipatedMeetings(supabase, userId) {
+        const { data } = await supabase
+            .from('User_Meeting')
+            .select(`id, rating, comment, Meeting ( *, group_category(option), plataform_meeting(option), meeting_tamplate(option), theme(option), User (user_name, last_name) )`)
+            .eq('id_user', userId);
+
+        if (!data) return [];
+
+        // Lógica de tratamento transferida para cá
+        return data
+            .filter(item => item.Meeting && item.Meeting.creator !== userId)
+            .map(item => ({
+                ...item.Meeting,
+                user_meeting_id: item.id,
+                user_rating: item.rating,
+                user_comment: item.comment
+            }))
+            .sort((a, b) => new Date(b.meeting_date) - new Date(a.meeting_date));
     }
 };

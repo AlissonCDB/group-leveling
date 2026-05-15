@@ -1,38 +1,43 @@
 import { createClient } from '@/utils/supabase/server';
+import { userService } from '@/services/user.service';
 import { meetingService } from '@/services/meeting.service';
 import { filterService } from '@/services/filter.service'; 
 import RaidsClientView from '@/features/raids/RaidsClientView';
 
 export default async function GroupsPage() {
     const supabase = await createClient();
-    
-    let currentUserId = null;
-    let raidsData = [];
-    
-    let groupedFilters = { categories: [], templates: [], themes: [], platforms: [] };
 
     try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser) {
-            const { data: userData } = await supabase.from('User').select('id').eq('id_login', authUser.id).single();
-            if (userData) currentUserId = userData.id;
-        }
+        const [currentUserId, raidsData, groupedFilters] = await Promise.all([
+            userService.getCurrentUserId(supabase),
+            meetingService.getAllRaids(supabase),
+            filterService.getFiltersGrouped(supabase)
+        ]);
 
-        raidsData = await meetingService.getAllRaids(supabase);
-        groupedFilters = await filterService.getFiltersGrouped(supabase);
+        return (
+            <RaidsClientView 
+                initialRaids={raidsData || []} 
+                categories={groupedFilters.categories || []}
+                templates={groupedFilters.templates || []}
+                platforms={groupedFilters.platforms || []}
+                themes={groupedFilters.themes || []}
+                currentUserId={currentUserId}
+            />
+        );
 
     } catch (err) {
         console.error("Erro ao carregar dados da página de Raids:", err);
+        
+        // Retorno de fallback seguro para evitar que a aplicação quebre em caso de erro no banco
+        return (
+            <RaidsClientView 
+                initialRaids={[]} 
+                categories={[]}
+                templates={[]}
+                platforms={[]}
+                themes={[]}
+                currentUserId={null}
+            />
+        );
     }
-
-    // Passando arrays limpos extraindo apenas a prop "option" do BD
-    return (
-        <RaidsClientView 
-            initialRaids={raidsData || []} 
-            categories={(groupedFilters.categories || []).map(f => f.option)}
-            templates={(groupedFilters.templates || []).map(f => f.option)}
-            platforms={(groupedFilters.platforms || []).map(f => f.option)}
-            currentUserId={currentUserId}
-        />
-    );
 }

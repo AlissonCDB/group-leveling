@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import { Swords, Briefcase, Trophy, Power } from 'lucide-react';
 import Image from 'next/image';
 import MenuCard from '@/components/UI/HomeCard';
@@ -32,12 +33,64 @@ const MENU_OPTIONS = [
 ];
 
 export default function Home() {
-  const [currentStep, setCurrentStep] = useState('start');
+  const [currentStep, setCurrentStep] = useState(null);
+  const [preloadedPendingTotal, setPreloadedPendingTotal] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    // 1. Lógica Visual (Oculta o Press Start se já o viu)
+    const hasSeenStart = sessionStorage.getItem('hasSeenStartScreen');
+    if (hasSeenStart) {
+      setCurrentStep('menu');
+    } else {
+      setCurrentStep('start');
+    }
+
+    // 2. Lógica Silenciosa (Pre-fetch das Avaliações)
+    async function preloadPendingRatings() {
+      if (sessionStorage.getItem('hasSeenRatingAlert')) return;
+
+      const supabase = createClient();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      const { data: userData } = await supabase.from('User').select('id').eq('id_login', authUser.id).single();
+      if (!userData) return;
+
+      const userId = userData.id;
+      const now = new Date();
+
+      try {
+        const [raidsRes, worksRes] = await Promise.all([
+          supabase.from('User_Meeting').select('Meeting!inner(meeting_date, creator)').eq('id_user', userId).is('rating', null),
+          supabase.from('User_Work').select('Work!inner(user_id)').eq('id_user', userId).is('rating', null)
+        ]);
+
+        const validRaids = (raidsRes.data || []).filter(pr => new Date(pr.Meeting.meeting_date) < now && pr.Meeting.creator !== userId);
+        const validWorks = (worksRes.data || []).filter(pw => pw.Work && pw.Work.user_id !== userId);
+
+        setPreloadedPendingTotal(validRaids.length + validWorks.length);
+      } catch (error) {
+        console.error("Erro no pre-fetch das avaliações:", error);
+      }
+    }
+
+    preloadPendingRatings();
+  }, []);
+
+  const handlePressStart = () => {
+    sessionStorage.setItem('hasSeenStartScreen', 'true');
+    setCurrentStep('menu');
+  };
+
+  // Previne renderização inconsistente enquanto decide qual ecrã mostrar
+  if (currentStep === null) {
+    return <div className="w-screen h-screen bg-gray-950" />;
+  }
 
   return (
     <div className="flex w-screen h-screen">
-      
+
       {/* Background Section */}
       <div className="fixed inset-0 z-0">
         <Image
@@ -65,7 +118,7 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => setCurrentStep('menu')}
+              onClick={handlePressStart}
               className="group flex items-center gap-3 px-10 py-5 bg-gray-900 border border-purple-500/50 rounded-2xl transition-all duration-300 hover:bg-purple-600 hover:scale-110 shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:shadow-[0_0_50px_rgba(168,85,247,0.6)]"
             >
               <Power className="text-purple-400 group-hover:text-white" size={28} />
@@ -77,8 +130,7 @@ export default function Home() {
         {/* TELA 2: MENU DE SELEÇÃO */}
         {currentStep === 'menu' && (
           <>
-            {/* 🔴 O ALERTA AGORA SÓ É CARREGADO NESTA SEQUÊNCIA */}
-            <PendingRatingsAlert />
+            <PendingRatingsAlert pendingTotal={preloadedPendingTotal} />
 
             <div className="flex w-full max-w-5xl h-full flex-col items-center justify-start md:justify-center pt-12 pb-12 md:py-0 overflow-y-auto scrollbar-hide animate-in slide-in-from-bottom-10 fade-in duration-500">
               <div className="text-center md:text-left w-full mb-12 shrink-0">
