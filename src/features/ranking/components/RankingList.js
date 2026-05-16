@@ -1,7 +1,6 @@
 import React from 'react';
-import { Trophy, Medal, Award, Star } from 'lucide-react';
+import { Trophy, Medal, Award, ArrowBigUp, ArrowBigDown } from 'lucide-react';
 
-// Exportamos a função de estilos para o Modal também poder usar na "Sua Posição"
 export const getRankStyles = (index) => {
     switch (index) {
         case 0: return { color: 'text-yellow-400', border: 'border-yellow-400/50', bg: 'bg-yellow-400/10', icon: <Trophy size={24} className="text-yellow-400" /> };
@@ -11,7 +10,7 @@ export const getRankStyles = (index) => {
     }
 };
 
-export default function RankingList({ rankingData, emptyMessage, labelScore, viewMode, currentUserId, onUserClick }) {
+export default function RankingList({ rankingData, emptyMessage, currentUserId, onUserClick }) {
     if (rankingData.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-800 rounded-2xl p-8 my-4">
@@ -27,7 +26,7 @@ export default function RankingList({ rankingData, emptyMessage, labelScore, vie
                 <div className="w-16 text-center">Rank</div>
                 <div className="flex-1">Membro</div>
                 <div className="w-24 text-center">Nível</div>
-                <div className="w-32 text-right">{viewMode === 'quantidade' ? labelScore : 'Média'}</div>
+                <div className="w-48 text-right">Progressão</div>
             </div>
 
             {rankingData.map((user, index) => {
@@ -58,18 +57,22 @@ export default function RankingList({ rankingData, emptyMessage, labelScore, vie
                             </div>
                         </div>
                         
+                        {/* NOVO: Exibição do Nível Dinâmico */}
                         <div className="w-24 text-center">
-                            <div className="text-sm font-bold text-gray-300">Lvl <span className={rankStyle.color}>{user.level}</span></div>
+                            <div className="text-sm font-bold text-gray-300">
+                                Lvl <span className={rankStyle.color}>{user.level}</span>
+                            </div>
                         </div>
-                        
-                        <div className="w-32 text-right">
-                            {viewMode === 'quantidade' ? (
-                                <div className="text-sm font-black text-gray-400">{user.score} <span className="text-[10px] text-gray-600 uppercase ml-1">{labelScore}</span></div>
-                            ) : (
-                                <div className="text-sm font-black text-amber-500 flex items-center justify-end gap-1">
-                                    {user.avgRating} <Star size={14} fill="currentColor" />
-                                </div>
-                            )}
+
+                        {/* NOVO: Exibição detalhada de XP e Votos */}
+                        <div className="w-48 flex flex-col items-end justify-center">
+                            <div className="text-sm font-black text-gray-200">
+                                {user.score} <span className="text-[10px] text-gray-500 uppercase ml-1">XP</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                                {user.upvotes > 0 && <span className="flex items-center text-[10px] text-emerald-500 font-bold"><ArrowBigUp size={12} className="fill-emerald-500 mr-0.5"/> {user.upvotes}</span>}
+                                {user.downvotes > 0 && <span className="flex items-center text-[10px] text-red-500 font-bold"><ArrowBigDown size={12} className="fill-red-500 mr-0.5"/> {user.downvotes}</span>}
+                            </div>
                         </div>
                     </div>
                 );

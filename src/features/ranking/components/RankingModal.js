@@ -1,14 +1,12 @@
 import React from 'react';
-import { Briefcase, CalendarPlus, X, Star } from 'lucide-react';
+import { Trophy, X } from 'lucide-react';
 import RankingList, { getRankStyles } from './RankingList';
 
-export default function RankingModal({ activeModal, onClose, worksRanking, meetingsRanking, viewMode, currentUserId, onUserClick }) {
-    if (!activeModal) return null;
+export default function RankingModal({ isOpen, onClose, rankingData, currentUserId, onUserClick }) {
+    if (!isOpen) return null;
 
-    const activeRankingList = activeModal === 'works' ? worksRanking : meetingsRanking;
-    const labelScore = activeModal === 'works' ? 'Pubs' : 'Raids';
-    const myRankIndex = activeRankingList.findIndex(u => u.id === currentUserId);
-    const myRankData = myRankIndex !== -1 ? activeRankingList[myRankIndex] : null;
+    const myRankIndex = rankingData.findIndex(u => u.id === currentUserId);
+    const myRankData = myRankIndex !== -1 ? rankingData[myRankIndex] : null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
@@ -17,13 +15,13 @@ export default function RankingModal({ activeModal, onClose, worksRanking, meeti
                 {/* Header do Modal */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-800 bg-gray-900/50 shrink-0">
                     <div className="flex items-center gap-3">
-                        {activeModal === 'works' ? <Briefcase className="text-amber-400" size={28} /> : <CalendarPlus className="text-blue-400" size={28} />}
+                        <Trophy className="text-amber-400" size={28} />
                         <div>
                             <h2 className="text-xl font-black text-white uppercase tracking-widest">
-                                Ranking <span className={activeModal === 'works' ? 'text-amber-500' : 'text-blue-500'}>Completo</span>
+                                Ranking <span className="text-amber-500">Geral</span>
                             </h2>
                             <p className="text-xs text-gray-500 uppercase tracking-widest">
-                                {activeModal === 'works' ? `Contribuidores por ${viewMode}` : `Organizadores por ${viewMode}`}
+                                Classificação completa de XP
                             </p>
                         </div>
                     </div>
@@ -35,10 +33,8 @@ export default function RankingModal({ activeModal, onClose, worksRanking, meeti
                 {/* Lista Completa */}
                 <div className="p-6 overflow-y-auto scrollbar-hide flex-1">
                     <RankingList 
-                        rankingData={activeRankingList}
-                        emptyMessage={`Nenhum jogador pontuou em ${viewMode}.`}
-                        labelScore={labelScore}
-                        viewMode={viewMode}
+                        rankingData={rankingData}
+                        emptyMessage="A guilda está inativa."
                         currentUserId={currentUserId}
                         onUserClick={onUserClick}
                     />
@@ -64,18 +60,12 @@ export default function RankingModal({ activeModal, onClose, worksRanking, meeti
                                 <div className="text-sm font-bold text-gray-300">Lvl <span className="text-amber-400">{myRankData.level}</span></div>
                             </div>
                             <div className="w-32 text-right">
-                                {viewMode === 'quantidade' ? (
-                                    <div className="text-sm font-black text-amber-400">{myRankData.score} <span className="text-[10px] text-amber-500 uppercase ml-1">{labelScore}</span></div>
-                                ) : (
-                                    <div className="text-sm font-black text-amber-500 flex items-center justify-end gap-1">
-                                        {myRankData.avgRating} <Star size={14} fill="currentColor" />
-                                    </div>
-                                )}
+                                <div className="text-sm font-black text-amber-400">{myRankData.score} <span className="text-[10px] text-amber-500 uppercase ml-1">XP</span></div>
                             </div>
                         </div>
                     ) : (
                         <div className="flex items-center justify-center p-4 rounded-xl border border-dashed border-gray-700 bg-gray-950">
-                            <p className="text-gray-500 italic text-sm">Você não possui pontuação válida em {viewMode} neste período.</p>
+                            <p className="text-gray-500 italic text-sm">Você não possui XP neste período.</p>
                         </div>
                     )}
                 </div>
