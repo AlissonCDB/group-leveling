@@ -52,7 +52,7 @@ export default function ModalTrabalho({ onFinish, workTypes = [], semester = [] 
         </p>
       </div>
 
-      <form action={action} className="space-y-6" encType="multipart/form-data">
+      <form action={action} className="space-y-6">
         <div className="p-4 bg-gray-900/40 border border-gray-800 rounded-xl space-y-4">
           <div>
             <Label className="flex items-center gap-2 mb-1.5"><FileText size={16} className="text-blue-400" /> Assunto / Disciplina <Req /></Label>
@@ -64,7 +64,7 @@ export default function ModalTrabalho({ onFinish, workTypes = [], semester = [] 
               <Label className="flex items-center gap-2 mb-1.5"><Briefcase size={16} className="text-blue-400" /> Tipo <Req /></Label>
               <StyledSelect name="tema" required defaultValue="">
                 <option value="" disabled>Selecione...</option>
-                {workTypes.map(type => <option key={type.id} value={type.option}>{type.option}</option>)}
+                {workTypes.map(type => <option key={type.id} value={type.id}>{type.option}</option>)}
               </StyledSelect>
             </div>
 
@@ -72,7 +72,7 @@ export default function ModalTrabalho({ onFinish, workTypes = [], semester = [] 
               <Label className="flex items-center gap-2 mb-1.5"><GraduationCap size={16} className="text-blue-400" /> Semestre <Req /></Label>
               <StyledSelect name="graduation" required defaultValue="">
                 <option value="" disabled>Selecione...</option>
-                {semester.map(sem => <option key={sem.id} value={sem.option}>{sem.option}</option>)}
+                {semester.map(sem => <option key={sem.id} value={sem.id}>{sem.option}</option>)}
               </StyledSelect>
             </div>
           </div>

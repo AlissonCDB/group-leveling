@@ -3,23 +3,18 @@ import { redirect } from 'next/navigation';
 import PublicProfileClientView from '@/features/profile/PublicProfileClientView';
 
 export default async function PublicProfilePage({ params }) {
-    
     const { id } = await params;
-    
     const supabase = await createClient();
 
-    // 1. Dados básicos
     const { data: user, error: userErr } = await supabase
         .from('User')
         .select('*, Class(name_class)')
         .eq('id', id)
         .single();
 
-    if (userErr || !user) {
-        redirect('/home'); 
-    }
+    if (userErr || !user) redirect('/home'); 
 
-    // 2. Trabalhos + Avaliações
+    // Trabalhos
     const { data: worksData } = await supabase
         .from('Work')
         .select('*, User_Work(rating)')
@@ -28,14 +23,17 @@ export default async function PublicProfilePage({ params }) {
     
     const processedWorks = (worksData || []).map(work => {
         const ratings = Array.isArray(work.User_Work) ? work.User_Work : (work.User_Work ? [work.User_Work] : []);
-        let total = 0, count = 0;
+        let totalScore = 0, count = 0;
         ratings.forEach(r => {
-            if (r && r.rating) { total += Number(r.rating); count++; }
+            if (r && r.rating !== null && r.rating !== undefined) { 
+                totalScore += Number(r.rating); 
+                count++; 
+            }
         });
-        return { ...work, avgRating: count > 0 ? (total / count) : 0 };
+        return { ...work, totalScore, hasRatings: count > 0 };
     });
 
-    // 3. Raids + Avaliações
+    // Raids
     const { data: meetingsData } = await supabase
         .from('Meeting')
         .select('*, User_Meeting(rating)')
@@ -44,14 +42,16 @@ export default async function PublicProfilePage({ params }) {
 
     const processedMeetings = (meetingsData || []).map(raid => {
         const ratings = Array.isArray(raid.User_Meeting) ? raid.User_Meeting : (raid.User_Meeting ? [raid.User_Meeting] : []);
-        let total = 0, count = 0;
+        let totalScore = 0, count = 0;
         ratings.forEach(r => {
-            if (r && r.rating) { total += Number(r.rating); count++; }
+            if (r && r.rating !== null && r.rating !== undefined) { 
+                totalScore += Number(r.rating); 
+                count++; 
+            }
         });
-        return { ...raid, avgRating: count > 0 ? (total / count) : 0 };
+        return { ...raid, totalScore, hasRatings: count > 0 };
     });
 
-    // Passa os dados mastigados para a View
     return (
         <PublicProfileClientView 
             userData={user} 

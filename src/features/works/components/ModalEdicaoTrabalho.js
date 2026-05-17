@@ -12,6 +12,9 @@ export default function ModalEdicaoTrabalho({ workData, onFinish, workTypes = []
   const [showSuccess, setShowSuccess] = useState(false);
   const [fileName, setFileName] = useState('');
 
+  const initialType = workTypes.find(t => t.id === workData.type || t.option === workData.type?.option)?.id || '';
+  const initialGraduation = semester.find(s => s.id === workData.graduation || s.option === workData.graduation?.option)?.id || '';
+
   useEffect(() => {
     document.documentElement.classList.add('modal-open-raid');
     return () => document.documentElement.classList.remove('modal-open-raid');
@@ -48,7 +51,7 @@ export default function ModalEdicaoTrabalho({ workData, onFinish, workTypes = []
         </h2>
       </div>
 
-      <form action={action} className="space-y-6" encType="multipart/form-data">
+      <form action={action} className="space-y-6">
         <input type="hidden" name="work_id" value={workData.id} />
         <input type="hidden" name="existing_archive" value={workData.archive} />
 
@@ -61,15 +64,15 @@ export default function ModalEdicaoTrabalho({ workData, onFinish, workTypes = []
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Tipo de Trabalho <Req /></Label>
-              <StyledSelect name="tema" required defaultValue={workData.type}>
-                {workTypes.map(type => <option key={type.id} value={type.option}>{type.option}</option>)}
+              <StyledSelect name="tema" required defaultValue={initialType}>
+                {workTypes.map(type => <option key={type.id} value={type.id}>{type.option}</option>)}
               </StyledSelect>
             </div>
 
             <div>
               <Label>Nível / Semestre <Req /></Label>
-              <StyledSelect name="graduation" required defaultValue={workData.graduation}>
-                {semester.map(sem => <option key={sem.id} value={sem.option}>{sem.option}</option>)}
+              <StyledSelect name="graduation" required defaultValue={initialGraduation}>
+                {semester.map(sem => <option key={sem.id} value={sem.id}>{sem.option}</option>)}
               </StyledSelect>
             </div>
           </div>
