@@ -230,10 +230,10 @@ export async function publishWorkAction(prevState, formData) {
     // 3. Salvar no Banco de Dados usando o Service
     const workData = {
       subject: subject,
-      type: type,
+      type: parseInt(type),
       archive: publicUrl,
-      graduation: graduation || 'Não informada',
-      user_id: userData.id // VINCULA O TRABALHO A QUEM FEZ O UPLOAD
+      graduation: parseInt(graduation),
+      user_id: userData.id
     };
 
     await workService.createWork(supabase, workData);
@@ -282,8 +282,8 @@ export async function updateWorkAction(prevState, formData) {
 
     const workData = {
       subject: formData.get('disciplina'),
-      type: formData.get('tema'),
-      graduation: formData.get('graduation'),
+      type: parseInt(formData.get('tema')),
+      graduation: parseInt(formData.get('graduation')),
       archive: finalArchiveUrl
     };
 
