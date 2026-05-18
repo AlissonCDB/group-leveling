@@ -15,8 +15,8 @@ export function useWorksFilter(initialWorks = []) {
     const filteredAndSortedWorks = useMemo(() => {
         return initialWorks
             .filter((work) => {
-                const matchesType = filters.type === 'all' || work.type === filters.type;
-                const matchesSemester = filters.semester === 'all' || work.graduation === filters.semester;
+                const matchesType = filters.type === 'all' || work.work_type?.option === filters.type;
+                const matchesSemester = filters.semester === 'all' || work.semester?.option === filters.semester;
 
                 return matchesType && matchesSemester;
             })
@@ -26,9 +26,9 @@ export function useWorksFilter(initialWorks = []) {
             });
     }, [initialWorks, filters]);
 
-    return { 
-        filters, 
-        updateFilter, 
-        filteredAndSortedWorks 
+    return {
+        filters,
+        updateFilter,
+        filteredAndSortedWorks
     };
 }

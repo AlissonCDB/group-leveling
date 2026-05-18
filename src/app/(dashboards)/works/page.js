@@ -16,16 +16,15 @@ export default async function WorksPage() {
         ]);
 
         return (
-            <WorksClientView 
-                initialWorks={worksData || []} 
-                currentUserId={currentUserId} 
+            <WorksClientView
+                initialWorks={worksData || []}
+                currentUserId={currentUserId}
                 workTypes={groupedFilters.workTypes || []}
                 semester={groupedFilters.semester || []}
             />
         );
-
     } catch (error) {
-        console.error("Erro ao carregar a página de trabalhos:", error);
+        console.error("Erro ao carregar a página de trabalhos:", error.message || JSON.stringify(error));
         return <WorksClientView initialWorks={[]} currentUserId={null} workTypes={[]} semester={[]} />;
     }
 }

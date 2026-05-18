@@ -34,23 +34,14 @@ export default function WorksClientView({ initialWorks, currentUserId, workTypes
     const openEditModal = (work) => { setWorkToEdit(work); setIsEditModalOpen(true); };
 
     const handleDownloadWork = async (work) => {
+        
         if (work.archive) window.open(work.archive, '_blank');
+
         if (!currentUserId || work.user_id === currentUserId) return;
 
         const supabase = createClient();
         try {
-            const { data: existingRecord, error: searchError } = await supabase
-                .from('User_Work')
-                .select('id')
-                .eq('id_user', currentUserId)
-                .eq('id_work', work.id)
-                .maybeSingle();
-
-            if (searchError) throw searchError;
-
-            if (!existingRecord) {
-                await supabase.from('User_Work').insert([{ id_user: currentUserId, id_work: work.id }]);
-            }
+            await workService.registerWorkDownload(supabase, work.id, currentUserId);
         } catch (err) {
             console.error("Erro interno ao processar download:", err.message);
         }

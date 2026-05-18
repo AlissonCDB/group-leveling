@@ -27,9 +27,12 @@ export const workService = {
                   user_name,
                   last_name,
                   Class ( name_class )
-                )
+                ),
+                semester:graduation ( option ),
+                work_type:type ( option )
             `)
-            .order('id', { ascending: false }); // Ordena pelos mais recentes (ID maior)
+            // Ordena pelos mais recentes (ID maior)
+            .order('id', { ascending: false });
 
         if (error) throw error;
         return data;
@@ -83,5 +86,26 @@ export const workService = {
                 user_comment: item.comment
             }))
             .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    },
+    
+    async registerWorkDownload(supabase, workId, userId) {
+        // 1. Verifica se já existe o registo de acesso
+        const { data: existingRecord, error: searchError } = await supabase
+            .from('User_Work')
+            .select('id')
+            .eq('id_user', userId)
+            .eq('id_work', workId)
+            .maybeSingle();
+
+        if (searchError) throw searchError;
+
+        // 2. Se não existir, cria o novo vínculo
+        if (!existingRecord) {
+            const { error: insertError } = await supabase
+                .from('User_Work')
+                .insert([{ id_user: userId, id_work: workId }]);
+                
+            if (insertError) throw insertError;
+        }
     }
 };

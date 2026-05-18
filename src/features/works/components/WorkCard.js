@@ -1,9 +1,9 @@
 import React from 'react';
 import { FileText, GraduationCap, Link as LinkIcon, Edit, BookOpen, Download } from 'lucide-react';
-import { 
-    Card, CardHeader, CardTitle, CardTagsWrapper, CardTag, 
-    CardSection, InfoBox, LogisticRow, LogisticData, 
-    CardFooter, CardUser 
+import {
+    Card, CardHeader, CardTitle, CardTagsWrapper, CardTag,
+    CardSection, InfoBox, LogisticRow, LogisticData,
+    CardFooter, CardUser
 } from '@/components/UI/Card';
 import { PrimaryButton } from '@/components/UI/Form';
 
@@ -12,7 +12,7 @@ export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
 
     return (
         <Card variant={isCreator ? 'highlight' : 'default'}>
-            
+
             <CardHeader>
                 <div className='flex flex-col items-start w-full md:w-auto'>
                     <label className="text-[10px] uppercase font-bold text-blue-500 tracking-widest mb-1">Título do Arquivo</label>
@@ -21,10 +21,10 @@ export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
 
                 <CardTagsWrapper>
                     <CardTag $color="blue">
-                        <FileText size={10} /> <span>{work.type}</span>
+                        <FileText size={10} /> <span>{work.work_type?.option || work.type}</span>
                     </CardTag>
                     <CardTag $color="emerald">
-                        <GraduationCap size={10} /> <span>{work.graduation}</span>
+                        <GraduationCap size={10} /> <span>{work.semester?.option || work.graduation}</span>
                     </CardTag>
                 </CardTagsWrapper>
             </CardHeader>
@@ -54,7 +54,7 @@ export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
                         <span className="role">Autor</span>
                     </div>
                 </CardUser>
-                
+
                 <div className="flex gap-2 items-center">
                     {isCreator && (
                         <button onClick={() => onEdit && onEdit(work)} className="p-2 text-amber-500/70 hover:text-amber-400 hover:bg-amber-900/30 rounded-lg transition-all border border-amber-500/30">
@@ -66,7 +66,7 @@ export default function WorkCard({ work, currentUserId, onEdit, onDownload }) {
                     </PrimaryButton>
                 </div>
             </CardFooter>
-            
+
         </Card>
     );
 }

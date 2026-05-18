@@ -7,6 +7,9 @@ const nextConfig = {
   },
   compiler: {
     styledComponents: true,
+  },
+  images: {
+    qualities: [75, 90],
   }
 };
 

@@ -1,5 +1,9 @@
 export const meetingService = {
-    // Cria uma nova Raid e já vincula o criador a ela
+    /**
+     * Cria uma nova reunião no banco de dados
+     * @param {Object} supabase - Instância do Supabase
+     * @param {Object} meetingData
+     */
     async createRaid(supabase, meetingData, userId) {
         const { data: raidData, error: raidError } = await supabase
             .from('Meeting')
