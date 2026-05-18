@@ -13,7 +13,6 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
     const [activeModal, setActiveModal] = useState(false); 
     const [periodFilter, setPeriodFilter] = useState('all'); 
 
-    // O hook agora devolve o Ranking Global
     const { globalRanking } = useRanking(allUsersData, periodFilter);
 
     const handleProfileNavigation = (id) => router.push(`/profile/${id}`);
@@ -51,7 +50,7 @@ export default function RanksClientView({ allUsersData, currentUserId }) {
                 <div className="flex flex-col gap-12 pb-12">
                     <RankingSection 
                         title="Top Hunters da Guilda"
-                        subtitle="Classificação Geral de Experiência (XP)"
+                        subtitle="Classificação Geral de Nível"
                         icon={Trophy}
                         colorClass="bg-amber-500"
                         data={globalRanking}

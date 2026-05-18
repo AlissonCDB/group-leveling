@@ -22,13 +22,16 @@ export default function RankingList({ rankingData, emptyMessage, currentUserId, 
 
     return (
         <div className="flex flex-col gap-3">
+            {/* CABEÇALHO DA TABELA */}
             <div className="hidden md:flex px-6 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                 <div className="w-16 text-center">Rank</div>
                 <div className="flex-1">Membro</div>
+                <div className="w-24 text-center">XP</div>
                 <div className="w-24 text-center">Nível</div>
-                <div className="w-48 text-right">Progressão</div>
+                <div className="w-32 text-right">Votos</div>
             </div>
 
+            {/* LINHAS DOS UTILIZADORES */}
             {rankingData.map((user, index) => {
                 const rankStyle = getRankStyles(index);
                 const isMe = currentUserId === user.id;
@@ -41,10 +44,12 @@ export default function RankingList({ rankingData, emptyMessage, currentUserId, 
                     >
                         {isMe && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />}
                         
+                        {/* Rank Posição */}
                         <div className="w-16 flex justify-center items-center font-black text-xl">
                             {index < 3 ? rankStyle.icon : <span className="text-gray-600">#{index + 1}</span>}
                         </div>
                         
+                        {/* Avatar e Nome */}
                         <div className="flex-1 flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center overflow-hidden">
                                 <span className={`font-bold ${rankStyle.color}`}>{user.name?.charAt(0).toUpperCase() || '?'}</span>
@@ -57,22 +62,35 @@ export default function RankingList({ rankingData, emptyMessage, currentUserId, 
                             </div>
                         </div>
                         
-                        {/* NOVO: Exibição do Nível Dinâmico */}
-                        <div className="w-24 text-center">
+                        {/* XP */}
+                        <div className="w-24 text-center flex flex-col items-center justify-center">
+                            <span className="text-sm font-black text-gray-300">
+                                {user.score} <span className="text-[9px] text-gray-500 font-normal">XP</span>
+                            </span>
+                        </div>
+                        
+                        {/* Nível */}
+                        <div className="w-24 text-center flex flex-col items-center justify-center">
                             <div className="text-sm font-bold text-gray-300">
-                                Lvl <span className={rankStyle.color}>{user.level}</span>
+                                Lvl <span className={`text-base font-black ${rankStyle.color}`}>{user.level}</span>
                             </div>
                         </div>
 
-                        {/* NOVO: Exibição detalhada de XP e Votos */}
-                        <div className="w-48 flex flex-col items-end justify-center">
-                            <div className="text-sm font-black text-gray-200">
-                                {user.score} <span className="text-[10px] text-gray-500 uppercase ml-1">XP</span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                                {user.upvotes > 0 && <span className="flex items-center text-[10px] text-emerald-500 font-bold"><ArrowBigUp size={12} className="fill-emerald-500 mr-0.5"/> {user.upvotes}</span>}
-                                {user.downvotes > 0 && <span className="flex items-center text-[10px] text-red-500 font-bold"><ArrowBigDown size={12} className="fill-red-500 mr-0.5"/> {user.downvotes}</span>}
-                            </div>
+                        {/* Votos*/}
+                        <div className="w-32 text-right flex items-center justify-end gap-2">
+                            {user.upvotes > 0 && (
+                                <span className="flex items-center text-[10px] text-emerald-500 font-bold">
+                                    <ArrowBigUp size={12} className="fill-emerald-500 mr-0.5"/> {user.upvotes}
+                                </span>
+                            )}
+                            {user.downvotes > 0 && (
+                                <span className="flex items-center text-[10px] text-red-500 font-bold">
+                                    <ArrowBigDown size={12} className="fill-red-500 mr-0.5"/> {user.downvotes}
+                                </span>
+                            )}
+                            {user.upvotes === 0 && user.downvotes === 0 && (
+                                <span className="text-gray-600 text-xs pr-2">-</span>
+                            )}
                         </div>
                     </div>
                 );

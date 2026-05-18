@@ -12,33 +12,33 @@ export function useRanking(allUsersData, periodFilter) {
             let totalDownvotes = 0;
             let actsCount = 0;
 
-            // 1. Processar Trabalhos
             const validWorks = user.Work ? user.Work.filter(w => !threshold || new Date(w.created_at) >= threshold) : [];
-            xp += validWorks.length * 50; // +50 XP por trabalho
+            xp += validWorks.length * 50; 
             actsCount += validWorks.length;
 
             validWorks.forEach(work => {
                 const evals = Array.isArray(work.User_Work) ? work.User_Work : (work.User_Work ? [work.User_Work] : []);
                 evals.forEach(ev => {
-                    if (ev?.rating === 1) { xp += 20; totalUpvotes++; }       // +20 XP por Upvote
-                    else if (ev?.rating === -1) { xp -= 10; totalDownvotes++; } // -10 XP por Downvote
+                    if (ev?.rating === 1) { xp += 20; totalUpvotes++; }       
+                    else if (ev?.rating === -1) { xp -= 10; totalDownvotes++; } 
                 });
             });
 
-            // 2. Processar Raids
+            
             const validMeetings = user.Meeting ? user.Meeting.filter(m => !threshold || new Date(m.created_at) >= threshold) : [];
-            xp += validMeetings.length * 50; // +50 XP por Raid
+            xp += validMeetings.length * 50; 
             actsCount += validMeetings.length;
 
             validMeetings.forEach(raid => {
                 const evals = Array.isArray(raid.User_Meeting) ? raid.User_Meeting : (raid.User_Meeting ? [raid.User_Meeting] : []);
                 evals.forEach(ev => {
-                    if (ev?.rating === 1) { xp += 20; totalUpvotes++; }       // +20 XP por Upvote
-                    else if (ev?.rating === -1) { xp -= 10; totalDownvotes++; } // -10 XP por Downvote
+                    if (ev?.rating === 1) { xp += 20; totalUpvotes++; }       
+                    else if (ev?.rating === -1) { xp -= 10; totalDownvotes++; } 
                 });
             });
 
-            const calcLevel = Math.floor(Math.max(xp, 0) / 100) + 1;
+            // fórmula p calcular aqui
+            const calcLevel = Math.floor(Math.log((Math.max(xp, 0) / 2000) + 1) / Math.log(1.1)) + 1;
 
             return {
                 id: user.id,
@@ -53,7 +53,6 @@ export function useRanking(allUsersData, periodFilter) {
         .filter(u => u.score > 0 || u.actsCount > 0) 
         .sort((a, b) => b.score - a.score || b.actsCount - a.actsCount); 
     }, [allUsersData, periodFilter]);
-
 
     return { globalRanking };
 }
