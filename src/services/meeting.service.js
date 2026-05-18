@@ -43,7 +43,7 @@ export const meetingService = {
                 theme ( option ),
                 meeting_tamplate ( option ),
                 group_category ( option ),
-                User_Meeting ( id_user ) 
+                User_Meeting ( id, id_user, rating, comment )
             `);
 
         if (error) throw error;
@@ -65,7 +65,7 @@ export const meetingService = {
         const { data, error } = await supabase
             .from('Meeting')
             .update(updateData)
-            .eq('id', meetingId) // Se sua coluna no banco for 'id_meeting', troque aqui
+            .eq('id', meetingId)
             .select()
             .single();
 

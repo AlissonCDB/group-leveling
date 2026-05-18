@@ -1,47 +1,42 @@
 'use client';
 
 import React, { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
 import { Briefcase, Users, Trash2, Target, BookOpen, ArrowBigUp, ArrowBigDown } from 'lucide-react';
 import ProfileSidebar from './components/ProfileSidebar';
-import RatingModal from './components/RatingModal';
+import RatingModal from '../../components/UI/RatingModal';
 
 export default function ProfileClientView({ profile, initialWorks, initialRaids, initialParticipatedRaids, initialDownloadedWorks }) {
-    
+
     const [userParticipatedRaids, setUserParticipatedRaids] = useState(initialParticipatedRaids);
     const [userDownloadedWorks, setUserDownloadedWorks] = useState(initialDownloadedWorks);
-    const [ratingModal, setRatingModal] = useState(null); 
-    const [modalType, setModalType] = useState(null); 
+    const [ratingModal, setRatingModal] = useState(null);
+    const [modalType, setModalType] = useState(null);
 
     const handleOpenModal = (item, type) => {
         setRatingModal(item);
         setModalType(type);
     };
 
-    const handleSubmitRating = async (selectedVote, ratingComment) => {
-        const supabase = createClient();
-        const table = modalType === 'raid' ? 'User_Meeting' : 'User_Work';
-        const idToUpdate = modalType === 'raid' ? ratingModal.user_meeting_id : ratingModal.user_work_id;
-
-        try {
-            const { error } = await supabase.from(table).update({ rating: selectedVote, comment: ratingComment || null }).eq('id', idToUpdate); 
-            if (error) throw error;
-
-            if (modalType === 'raid') {
-                setUserParticipatedRaids(prev => prev.map(r => r.user_meeting_id === idToUpdate ? { ...r, user_rating: selectedVote, user_comment: ratingComment } : r));
-            } else {
-                setUserDownloadedWorks(prev => prev.map(w => w.user_work_id === idToUpdate ? { ...w, user_rating: selectedVote, user_comment: ratingComment } : w));
-            }
-            setRatingModal(null); 
-        } catch (err) {
-            console.error("Erro ao salvar avaliação:", err);
-            alert("Não foi possível guardar a sua avaliação.");
+    const handleSubmitRating = (selectedVote, ratingComment) => {
+        if (modalType === 'raid') {
+            const idToUpdate = ratingModal.user_meeting_id;
+            setUserParticipatedRaids(prev =>
+                prev.map(r => r.user_meeting_id === idToUpdate
+                    ? { ...r, user_rating: selectedVote, user_comment: ratingComment } : r
+                )
+            );
+        } else {
+            const idToUpdate = ratingModal.user_work_id;
+            setUserDownloadedWorks(prev =>
+                prev.map(w => w.user_work_id === idToUpdate
+                    ? { ...w, user_rating: selectedVote, user_comment: ratingComment } : w
+                )
+            );
         }
     };
 
     const renderUserVote = (rating) => {
-        // Compatibilidade com notas antigas (estrelas)
-        const isUpvote = rating > 0; 
+        const isUpvote = rating > 0;
         return (
             <div className="flex items-center gap-1 font-bold text-xs">
                 {isUpvote ? (
@@ -96,9 +91,20 @@ export default function ProfileClientView({ profile, initialWorks, initialRaids,
                                     <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest mb-2">{work.type}</span>
                                     <h4 className="text-white font-bold truncate mb-4">{work.subject}</h4>
                                     <div className="mt-auto pt-3 border-t border-gray-800 flex justify-end">
-                                        {work.user_rating ? renderUserVote(work.user_rating) : (
+
+                                        {work.user_rating ? (
+                                            <button
+                                                onClick={() => handleOpenModal(work, 'work')}
+                                                className="flex items-center gap-1 group cursor-pointer transition-all hover:opacity-80"
+                                                title="Clique para alterar a sua avaliação"
+                                            >
+                                                {renderUserVote(work.user_rating)}
+                                                <span className="text-[9px] text-gray-500 font-normal ml-1 group-hover:text-amber-400">(Alterar)</span>
+                                            </button>
+                                        ) : (
                                             <button onClick={() => handleOpenModal(work, 'work')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-amber-600 px-3 py-1.5 rounded">Avaliar Material</button>
                                         )}
+
                                     </div>
                                 </div>
                             )) : <p className="text-gray-500 italic text-sm">Nenhum material acessado.</p>}
@@ -109,15 +115,28 @@ export default function ProfileClientView({ profile, initialWorks, initialRaids,
                         <h3 className="flex items-center gap-2 font-black text-white uppercase tracking-tight mb-4"><Target size={20} className="text-emerald-500" /> Raids Participadas</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {userParticipatedRaids.length > 0 ? userParticipatedRaids.map(raid => {
-                                const hasPassed = new Date(raid.meeting_date) < new Date(); 
+                                const hasPassed = new Date(raid.meeting_date) < new Date();
                                 return (
                                     <div key={raid.user_meeting_id} className="flex flex-col p-5 bg-gray-900 border border-emerald-500/30 rounded-xl min-h-35">
                                         <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mb-2">{raid.group_category?.option}</span>
                                         <h4 className="text-white font-bold truncate mb-4">{raid.theme?.option || 'Sem Tema'}</h4>
                                         <div className="mt-auto pt-3 border-t border-gray-800 flex justify-end">
-                                            {!hasPassed ? <span className="text-[10px] uppercase font-bold text-emerald-500">Em Breve</span>
-                                            : raid.user_rating ? renderUserVote(raid.user_rating)
-                                            : <button onClick={() => handleOpenModal(raid, 'raid')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-emerald-600 px-3 py-1.5 rounded">Avaliar Raid</button>}
+
+                                            {!hasPassed ? (
+                                                <span className="text-[10px] uppercase font-bold text-emerald-500">Em Breve</span>
+                                            ) : raid.user_rating ? (
+                                                <button
+                                                    onClick={() => handleOpenModal(raid, 'raid')}
+                                                    className="flex items-center gap-1 group cursor-pointer transition-all hover:opacity-80"
+                                                    title="Clique para alterar a sua avaliação"
+                                                >
+                                                    {renderUserVote(raid.user_rating)}
+                                                    <span className="text-[9px] text-gray-500 font-normal ml-1 group-hover:text-emerald-400">(Alterar)</span>
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => handleOpenModal(raid, 'raid')} className="text-[10px] uppercase font-bold tracking-widest text-white bg-emerald-600 px-3 py-1.5 rounded">Avaliar Raid</button>
+                                            )}
+
                                         </div>
                                     </div>
                                 );
@@ -132,12 +151,11 @@ export default function ProfileClientView({ profile, initialWorks, initialRaids,
                     </button>
                 </div>
             </div>
-
-            <RatingModal 
-                modalData={ratingModal} 
-                modalType={modalType} 
-                onClose={() => setRatingModal(null)} 
-                onSubmitRating={handleSubmitRating} 
+            <RatingModal
+                modalData={ratingModal}
+                modalType={modalType}
+                onClose={() => setRatingModal(null)}
+                onSuccess={handleSubmitRating}
             />
         </div>
     );

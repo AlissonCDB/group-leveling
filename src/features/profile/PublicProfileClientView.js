@@ -41,7 +41,7 @@ export default function PublicProfileClientView({ userData, works, meetings }) {
 
                 {/* CABEÇALHO DO PERFIL */}
                 <div className="flex flex-col md:flex-row items-center gap-8 mb-12 border-b border-gray-800 pb-12">
-                    <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                    <div className="w-32 h-32 rounded-3xl bg-linear-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
                         <UserIcon size={60} className="text-white" />
                     </div>
                     <div className="text-center md:text-left">

@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import {
-    Calendar, Clock, MonitorPlay, MapPin, Wifi, Layers, Edit, AlignLeft, Users
+    Calendar, Clock, MonitorPlay, MapPin, Wifi, Layers, Edit, AlignLeft, Users, ArrowBigUp, ArrowBigDown
 } from 'lucide-react';
 
 import {
@@ -11,8 +11,6 @@ import {
 } from '@/components/UI/Card';
 import { PrimaryButton } from '@/components/UI/Form';
 
-// Trazemos o ParticipantBadge para dentro do componente, já que é o único estilo 
-// 100% exclusivo das Raids (barra de progresso de vagas).
 const ParticipantBadge = styled.div`
   display: flex;
   flex-direction: column;
@@ -44,10 +42,11 @@ const ParticipantBadge = styled.div`
   }
 `;
 
-export default function RaidCard({ raid, currentUserId, onEdit, onEnter, onLeave }) {
+export default function RaidCard({ raid, currentUserId, onEdit, onEnter, onLeave, onRate }) {
     const now = new Date();
     const isCreator = currentUserId === raid.creator;
     const isMember = raid.User_Meeting?.some(m => m.id_user === currentUserId) || isCreator;
+    const userMeeting = raid.User_Meeting?.find(m => m.id_user === currentUserId);
 
     const utcDate = new Date(raid.meeting_date);
     const raidDate = new Date(
@@ -155,21 +154,42 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter, onLeave
                 </ParticipantBadge>
 
                 <div className="flex gap-2 items-center">
+
+                    {/* 1. LÓGICA DE AVALIAÇÃO: Livre para membros a qualquer momento! */}
+                    {!isCreator && isMember && (
+                        userMeeting?.rating ? (
+                            <button
+                                onClick={() => onRate(raid, userMeeting)}
+                                className="flex items-center gap-1 text-[10px] uppercase font-black px-3 py-2 rounded-lg bg-gray-900 border border-gray-800 hover:border-purple-500/50 transition-all cursor-pointer group/vote"
+                                title="Clique para alterar a sua avaliação"
+                            >
+                                {userMeeting.rating > 0 ? (
+                                    <span className="flex items-center gap-1 text-emerald-500 group-hover/vote:text-purple-400"><ArrowBigUp size={14} className="fill-emerald-500 group-hover/vote:fill-purple-400" /> Buff</span>
+                                ) : (
+                                    <span className="flex items-center gap-1 text-red-500 group-hover/vote:text-purple-400"><ArrowBigDown size={14} className="fill-red-500 group-hover/vote:fill-purple-400" /> Debuff</span>
+                                )}
+                            </button>
+                        ) : (
+                            <PrimaryButton style={{ padding: '0.5rem 1rem', fontSize: '10px', background: '#10b981' }} onClick={() => onRate(raid, userMeeting)}>
+                                Avaliar
+                            </PrimaryButton>
+                        )
+                    )}
+
+                    {/* 2. BOTÃO DE EDIÇÃO: Apenas para o criador se a raid estiver ativa */}
                     {isCreator && !isPast && (
                         <button onClick={() => onEdit(raid)} className="p-1.5 text-amber-500/70 hover:text-amber-400 hover:bg-amber-900/30 rounded-lg transition-all border border-amber-500/30">
                             <Edit size={16} />
                         </button>
                     )}
+
+                    {/* 3. AÇÕES DE ESTADO DA RAID: Participar, Acessar, Abandonar ou Encerrada */}
                     {isPast ? (
                         <span className="px-3 py-2 bg-gray-800/50 border border-gray-700 text-[10px] uppercase font-bold text-gray-500 rounded-lg">Encerrada</span>
                     ) : isMember ? (
                         <>
-                            {/* Botão de Sair apenas para membros (não criadores) */}
                             {!isCreator && (
-                                <button
-                                    onClick={onLeave}
-                                    className="px-3 py-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 text-[10px] uppercase font-bold rounded-lg transition-colors"
-                                >
+                                <button onClick={onLeave} className="px-3 py-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 text-[10px] uppercase font-bold rounded-lg transition-colors">
                                     Abandonar
                                 </button>
                             )}
@@ -184,6 +204,7 @@ export default function RaidCard({ raid, currentUserId, onEdit, onEnter, onLeave
                             Participar
                         </PrimaryButton>
                     )}
+
                 </div>
             </CardFooter>
 

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { meetingService } from '@/services/meeting.service';
+import { ratingService } from '@/services/rating.service';
 import { MonitorPlay } from 'lucide-react';
 
 // COMPONENTES
@@ -13,6 +14,7 @@ import ModalEdicaoAgendamento from './components/ModalEdicaoAgendamento';
 import RaidSidebar from './components/RaidSidebar';
 import RaidCard from './components/RaidCard';
 import DynamicFilterPanel from '@/components/Layout/DynamicFilterPanel';
+import RatingModal from '@/components/UI/RatingModal';
 
 // HOOKS E CONSTANTES
 import { useRaidsFilter } from '@/hooks/useRaidsFilter';
@@ -25,6 +27,7 @@ export default function RaidsClientView({ initialRaids, categories, templates, p
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [raidToEdit, setRaidToEdit] = useState(null);
     const [scrollTop, setScrollTop] = useState(0);
+    const [ratingModalData, setRatingModalData] = useState(null);
 
     const { filters, updateFilter, filteredAndSortedRaids } = useRaidsFilter(initialRaids);
 
@@ -64,6 +67,20 @@ export default function RaidsClientView({ initialRaids, categories, templates, p
         }
     };
 
+
+    // Função para salvar a avaliação
+    const handleRateSubmit = async (selectedVote, ratingComment) => {
+        const supabase = createClient();
+        try {
+            await ratingService.rateRaid(supabase, ratingModalData.user_meeting_id, selectedVote, ratingComment);
+            setRatingModalData(null);
+            router.refresh();
+        } catch (error) {
+            console.error("Erro ao avaliar:", error);
+            alert("Não foi possível enviar a avaliação.");
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row w-screen h-screen bg-gray-950 font-sans overflow-y-auto md:overflow-hidden" onScroll={handleScroll}>
             <RaidSidebar onOpenCreateModal={() => setIsModalOpen(true)} scrollTop={scrollTop} />
@@ -92,6 +109,12 @@ export default function RaidsClientView({ initialRaids, categories, templates, p
                                 onEdit={(r) => { setRaidToEdit(r); setIsEditModalOpen(true); }}
                                 onEnter={() => handleEnterRaid(raid)}
                                 onLeave={() => handleLeaveRaid(raid)}
+                                onRate={(r, userMeeting) => setRatingModalData({
+                                    ...r,
+                                    user_meeting_id: userMeeting.id,
+                                    user_rating: userMeeting.rating,
+                                    user_comment: userMeeting.comment
+                                })}
                             />
                         ))}
                     </div>
@@ -114,6 +137,14 @@ export default function RaidsClientView({ initialRaids, categories, templates, p
                     />
                 )}
             </Modal>
+            {ratingModalData && (
+                <RatingModal
+                    modalData={ratingModalData}
+                    modalType="raid"
+                    onClose={() => setRatingModalData(null)}
+                    onSuccess={() => router.refresh()}
+                />
+            )}
         </div>
     );
 }
